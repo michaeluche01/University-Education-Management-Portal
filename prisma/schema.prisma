@@ -1,0 +1,357 @@
+// Prisma 7 schema for UEMP (University Education Management Portal)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  STUDENT
+  LECTURER
+  DEPARTMENT_ADMIN
+  SUPER_ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum SemesterName {
+  FIRST
+  SECOND
+}
+
+enum ResultStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  RETURNED
+}
+
+enum AuditAction {
+  USER_LOGIN
+  USER_LOGIN_FAILED
+  USER_CREATED
+  USER_UPDATED
+  USER_STATUS_CHANGED
+  USER_ROLE_CHANGED
+  USER_PASSWORD_CHANGED
+  ENTITY_CREATED
+  ENTITY_UPDATED
+  ENTITY_DELETED
+  SESSION_CURRENT_CHANGED
+  COURSE_ASSIGNED
+  COURSE_UNASSIGNED
+  REGISTRATION_CREATED
+  REGISTRATION_DELETED
+  RESULT_DRAFT_SAVED
+  RESULT_SUBMITTED
+  RESULT_APPROVED
+  RESULT_RETURNED
+  RESULT_REOPENED
+  GRADE_SCALE_UPDATED
+}
+
+model User {
+  id               String           @id @default(cuid())
+  email            String           @unique
+  passwordHash     String
+  fullName         String
+  phone            String?
+  role             Role
+  status           AccountStatus    @default(ACTIVE)
+  failedLoginCount Int              @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  // Role-specific 1:1 profile links
+  studentProfile   Student?
+  lecturerProfile  Lecturer?
+  deptAdminProfile DepartmentAdmin?
+
+  // Audit & tracking relations
+  auditLogs        AuditLog[]       @relation("AuditActor")
+  enteredResults   Result[]         @relation("ResultEnteredBy")
+  reviewedResults  Result[]         @relation("ResultReviewedBy")
+  reopenedResults  Result[]         @relation("ResultReopenedBy")
+
+  @@index([role, status])
+}
+
+model Faculty {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  departments Department[]
+}
+
+model Department {
+  id        String            @id @default(cuid())
+  name      String
+  code      String            @unique
+  facultyId String
+  faculty   Faculty           @relation(fields: [facultyId], references: [id], onDelete: Restrict)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  programs  Program[]
+  courses   Course[]
+  students  Student[]
+  lecturers Lecturer[]
+  admins    DepartmentAdmin[]
+
+  @@unique([facultyId, name])
+  @@index([facultyId])
+}
+
+model DepartmentAdmin {
+  id           String     @id @default(cuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  staffId      String     @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([departmentId])
+}
+
+model Program {
+  id            String     @id @default(cuid())
+  name          String
+  code          String     @unique
+  durationYears Int        @default(4)
+  departmentId  String
+  department    Department @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  students      Student[]
+  courses       Course[]
+
+  @@unique([departmentId, name])
+  @@index([departmentId])
+}
+
+model AcademicLevel {
+  id          String    @id @default(cuid())
+  levelNumber Int       @unique
+  name        String    @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  students    Student[]
+  courses     Course[]
+}
+
+model AcademicSession {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  startDate DateTime
+  endDate   DateTime
+  isCurrent Boolean    @default(false)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  semesters Semester[]
+}
+
+model Semester {
+  id               String               @id @default(cuid())
+  sessionId        String
+  session          AcademicSession      @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  name             SemesterName
+  isCurrent        Boolean              @default(false)
+  registrationOpen Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  assignments      CourseAssignment[]
+  registrations    CourseRegistration[]
+  results          Result[]
+
+  @@unique([sessionId, name])
+  @@index([isCurrent])
+}
+
+model Student {
+  id           String               @id @default(cuid())
+  userId       String               @unique
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matricNumber String               @unique
+  departmentId String
+  department   Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  programId    String
+  program      Program              @relation(fields: [programId], references: [id], onDelete: Restrict)
+  levelId      String
+  level        AcademicLevel        @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  gender       String?
+  dateOfBirth  DateTime?
+  address      String?
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  registrations CourseRegistration[]
+  results       Result[]
+
+  @@index([departmentId, programId, levelId])
+}
+
+model Lecturer {
+  id             String             @id @default(cuid())
+  userId         String             @unique
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffId        String             @unique
+  departmentId   String
+  department     Department         @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  title          String?
+  specialization String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  assignments    CourseAssignment[]
+
+  @@index([departmentId])
+}
+
+model Course {
+  id           String               @id @default(cuid())
+  code         String               @unique
+  title        String
+  creditUnits  Int
+  description  String?
+  departmentId String
+  department   Department           @relation(fields: [departmentId], references: [id], onDelete: Restrict)
+  programId    String
+  program      Program              @relation(fields: [programId], references: [id], onDelete: Restrict)
+  levelId      String
+  level        AcademicLevel        @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  semesterName SemesterName
+  isActive     Boolean              @default(true)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  assignments   CourseAssignment[]
+  registrations CourseRegistration[]
+  results       Result[]
+
+  @@index([departmentId, programId, levelId, semesterName])
+}
+
+model CourseAssignment {
+  id         String   @id @default(cuid())
+  courseId   String
+  course     Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lecturerId String
+  lecturer   Lecturer @relation(fields: [lecturerId], references: [id], onDelete: Cascade)
+  semesterId String
+  semester   Semester @relation(fields: [semesterId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([courseId, lecturerId, semesterId])
+  @@index([lecturerId, semesterId])
+  @@index([courseId, semesterId])
+}
+
+model CourseRegistration {
+  id           String   @id @default(cuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  semesterId   String
+  semester     Semester @relation(fields: [semesterId], references: [id], onDelete: Restrict)
+  registeredAt DateTime @default(now())
+
+  result       Result?
+
+  @@unique([studentId, courseId, semesterId])
+  @@index([courseId, semesterId])
+  @@index([studentId, semesterId])
+}
+
+model Result {
+  id             String             @id @default(cuid())
+  registrationId String             @unique
+  registration   CourseRegistration @relation(fields: [registrationId], references: [id], onDelete: Restrict)
+  studentId      String
+  student        Student            @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  courseId       String
+  course         Course             @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  semesterId     String
+  semester       Semester           @relation(fields: [semesterId], references: [id], onDelete: Restrict)
+
+  caScore        Float              @default(0)
+  examScore      Float              @default(0)
+  totalScore     Float              @default(0)
+  grade          String
+  gradePoint     Float
+  status         ResultStatus       @default(DRAFT)
+  feedback       String?
+
+  enteredById    String
+  enteredBy      User               @relation("ResultEnteredBy", fields: [enteredById], references: [id])
+  submittedAt    DateTime?
+
+  reviewedById   String?
+  reviewedBy     User?              @relation("ResultReviewedBy", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+
+  reopenedById   String?
+  reopenedBy     User?              @relation("ResultReopenedBy", fields: [reopenedById], references: [id])
+  reopenedAt     DateTime?
+  reopenReason   String?
+
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([studentId, courseId, semesterId])
+  @@index([courseId, semesterId, status])
+  @@index([studentId, status])
+}
+
+model GradeScale {
+  id         String   @id @default(cuid())
+  grade      String   @unique
+  minScore   Int
+  maxScore   Int
+  gradePoint Float
+  remark     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([minScore, maxScore])
+}
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  actorId       String
+  actor         User        @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+  actorRole     Role
+  departmentId  String?
+  action        AuditAction
+  entityType    String
+  entityId      String
+  beforeSummary Json?
+  afterSummary  Json?
+  reason        String?
+  createdAt     DateTime    @default(now())
+
+  @@index([departmentId])
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
