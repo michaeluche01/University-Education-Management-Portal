@@ -356,7 +356,60 @@
 - `tests/rbac/registration.test.ts`
 
 ### Known Gaps
-- None for Phase 5. Lecturer result entry & grading (Phase 6) and result approval workflow & CGPA (Phase 7) are next per Decision D1.
+- None for Phase 5.
+
+---
+
+## Phase 6: Grading & Lecturer Results
+
+### What Was Built
+- **Pure Score Arithmetic & GPA / CGPA Calculations (`src/server/services/grading.service.ts`, `tests/unit/grading.test.ts`)**:
+  - Pure integer arithmetic score processing (`0 <= CA <= 30`, `0 <= Exam <= 70`, at most 2 decimal places, integer hundredths arithmetic, `roundHalfUp2Decimals`), preventing JavaScript floating-point errors (e.g., `0.1 + 0.2 = 0.30`).
+  - Pure `calculateWeightedGpa`, `calculateSemesterGpa`, and `calculateCgpa` functions using credit-unit weighting (`sum(gp * units) / sum(units)` rounded half-up to 2 decimals, returning `null` when credit units are zero).
+  - 20 unit tests in `tests/unit/grading.test.ts` testing all grade scale boundaries (`39.99`, `40`, `44.99`, `45`, `69.99`, `70`), `x.xx5` midpoint rounding, `F` grades pulling down GPA, and empty/zero-unit edge cases.
+- **Strict Zod Validators (`src/lib/validators/result.ts`)**:
+  - Strict `.strict()` schemas rejecting client-smuggled fields (`totalScore`, `grade`, `gradePoint`, `status`, `studentId`, `enteredById`, etc.) with `400`.
+  - `saveDraftResultsSchema` validating array of 1–500 score entries.
+  - `submitResultsSchema` validating `courseId` and `semesterId`.
+  - `resultSheetQuerySchema` validating sheet queries.
+- **Lecturer Result Services (`src/server/services/result.service.ts`, `src/server/services/lecturer-dashboard.service.ts`)**:
+  - `getResultSheet`: scoped via `assertLecturerCourseAssignment`; strictly enforces Decision D3 (draft scores are never revealed to `DEPARTMENT_ADMIN` or `SUPER_ADMIN`).
+  - `saveDraftResults`: atomic transactional update/upsert writing `RESULT_DRAFT_SAVED` audit log per row with before/after score breakdown and department ID. Validates that every registration belongs to the course in the current semester (rejects alien registrations with `400` without persisting partial updates).
+  - `submitResults`: atomic transition to `SUBMITTED`. Verifies every registered student has an entered score row; returns `409` with list of missing students if any student is missing. Writes `RESULT_SUBMITTED` audit log per row.
+  - Post-submit immutability: editing submitted or approved rows via draft endpoint is rejected with `409`.
+- **REST Route Handlers (`src/app/api/v1/results/*`)**:
+  - `GET /api/v1/results/sheet`: sheet fetching with summary counts.
+  - `POST /api/v1/results/draft`: draft score submission with `assertSameOrigin`.
+  - `POST /api/v1/results/submit`: batch final submission with `assertSameOrigin`.
+- **Lecturer UI & Navigation (`src/app/(portal)/lecturer/*`, `src/components/lecturer/*`)**:
+  - `/lecturer`: Lecturer dashboard with active semester summary cards, assigned courses table, and prominent warning alert for returned results requiring attention.
+  - `/lecturer/courses`: Assigned courses list with progress indicators.
+  - `/lecturer/courses/[assignmentId]`: Interactive spreadsheet-style scoresheet (`LecturerScoreSheet.tsx`) featuring real-time total/grade computation, summary cards (enrolled, entered, average score, pass/fail counts), draft saving, confirm dialog for submission, and read-only locked mode for submitted/approved sheets.
+  - Navigation in `src/components/layout/PortalShell.tsx` updated with "My Courses".
+- **RBAC Integration Suite (`tests/rbac/results-lecturer.test.ts`)**:
+  - 10 automated integration tests covering 401 unauthenticated requests, 403 role restrictions for Student/Admins and foreign origin, strict schema smuggling rejection, score boundary rejection, atomic rollback on alien registration ID, lecturer assignment scoping, draft saving accuracy, 409 missing student rejection, and post-submit immutability.
+
+### Files Added / Modified
+- `docs/DECISIONS.md`
+- `docs/PROGRESS.md`
+- `src/server/services/grading.service.ts`
+- `src/lib/validators/result.ts`
+- `src/server/services/result.service.ts`
+- `src/server/services/lecturer-dashboard.service.ts`
+- `src/app/api/v1/results/sheet/route.ts`
+- `src/app/api/v1/results/draft/route.ts`
+- `src/app/api/v1/results/submit/route.ts`
+- `src/app/(portal)/lecturer/page.tsx`
+- `src/app/(portal)/lecturer/courses/page.tsx`
+- `src/app/(portal)/lecturer/courses/[assignmentId]/page.tsx`
+- `src/components/lecturer/LecturerScoreSheet.tsx`
+- `src/components/shared/StatusBadge.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/unit/grading.test.ts`
+- `tests/rbac/results-lecturer.test.ts`
+
+### Known Gaps
+- Result approval workflow, return for correction, reopening, and audit viewer (Phase 7a & 7b) are built next.
 
 
 

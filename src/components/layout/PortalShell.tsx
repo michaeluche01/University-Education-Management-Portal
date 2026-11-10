@@ -27,7 +27,10 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Registration Slip", href: "/student/print/registration" },
     { label: "My Profile", href: "/student/profile" },
   ],
-  LECTURER: [{ label: "Dashboard", href: "/lecturer" }],
+  LECTURER: [
+    { label: "Dashboard", href: "/lecturer" },
+    { label: "My Courses", href: "/lecturer/courses" },
+  ],
   DEPARTMENT_ADMIN: [
     { label: "Dashboard", href: "/dept-admin" },
     { label: "Programs", href: "/dept-admin/programs" },
