@@ -33,6 +33,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ],
   DEPARTMENT_ADMIN: [
     { label: "Dashboard", href: "/dept-admin" },
+    { label: "Approvals", href: "/dept-admin/approvals" },
     { label: "Programs", href: "/dept-admin/programs" },
     { label: "Courses", href: "/dept-admin/courses" },
     { label: "Students", href: "/dept-admin/students" },
@@ -41,6 +42,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   ],
   SUPER_ADMIN: [
     { label: "Dashboard", href: "/super-admin" },
+    { label: "Approvals", href: "/super-admin/approvals" },
     { label: "Faculties", href: "/super-admin/faculties" },
     { label: "Departments", href: "/super-admin/departments" },
     { label: "Programs & Levels", href: "/super-admin/programs" },

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   AlertCircle,
   BookMarked,
@@ -58,6 +59,7 @@ export default async function DeptAdminDashboardPage() {
       value: stats.submittedResultsAwaitingApproval,
       subtext: "Pending departmental review",
       icon: CheckCircle2,
+      href: "/dept-admin/approvals",
     },
     {
       label: "Unassigned Courses This Semester",
@@ -104,8 +106,11 @@ export default async function DeptAdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((item) => {
           const Icon = item.icon;
-          return (
-            <Card key={item.label}>
+          const cardContent = (
+            <Card
+              key={item.label}
+              className={item.href ? "hover:border-primary/50 transition-colors" : undefined}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardDescription className="text-xs font-medium">
                   {item.label}
@@ -122,6 +127,15 @@ export default async function DeptAdminDashboardPage() {
               </CardContent>
             </Card>
           );
+
+          if (item.href) {
+            return (
+              <Link key={item.label} href={item.href} className="block">
+                {cardContent}
+              </Link>
+            );
+          }
+          return cardContent;
         })}
       </div>
     </div>

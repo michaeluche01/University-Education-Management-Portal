@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   BookOpen,
   Building2,
@@ -72,6 +73,7 @@ export default async function SuperAdminDashboardPage() {
       value: stats.resultsAwaitingApproval,
       subtext: "Submitted results pending review",
       icon: CheckCircle2,
+      href: "/super-admin/approvals",
     },
   ];
 
@@ -85,8 +87,11 @@ export default async function SuperAdminDashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((item) => {
           const Icon = item.icon;
-          return (
-            <Card key={item.label}>
+          const cardContent = (
+            <Card
+              key={item.label}
+              className={item.href ? "hover:border-primary/50 transition-colors" : undefined}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                 <CardDescription className="text-xs font-medium">
                   {item.label}
@@ -103,6 +108,15 @@ export default async function SuperAdminDashboardPage() {
               </CardContent>
             </Card>
           );
+
+          if (item.href) {
+            return (
+              <Link key={item.label} href={item.href} className="block">
+                {cardContent}
+              </Link>
+            );
+          }
+          return cardContent;
         })}
       </div>
     </div>

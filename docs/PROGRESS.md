@@ -409,7 +409,51 @@
 - `tests/rbac/results-lecturer.test.ts`
 
 ### Known Gaps
-- Result approval workflow, return for correction, reopening, and audit viewer (Phase 7a & 7b) are built next.
+- None for Phase 6.
+
+---
+
+## Phase 7a: Approval Workflow & Audit Trail
+
+### What Was Built
+- **Departmental Result Approval Services (`src/server/services/result-approval.service.ts`)**:
+  - `listSubmissions`: queries courses with student registrations, filtering by department for `DEPARTMENT_ADMIN` and university-wide for `SUPER_ADMIN`.
+  - `approveResults`: conditional `updateMany` (`where: { id: { in: targetIds }, status: "SUBMITTED" }`) validating that count matches expected count (rolls back with `409` on concurrent modification). Checks that reviewer is not the lecturer who entered the scores (`res.enteredById !== session.userId`; throws `403` to prevent self-approval). Recalculates grade and gradePoint against current `GradeScale` table. Writes `RESULT_APPROVED` `AuditLog` row per approved result with before/after summaries and department ID.
+  - `returnResults`: validates reviewer feedback (3–500 chars). Conditional `updateMany` transitioning results from `SUBMITTED` to `RETURNED`, setting `feedback` column. Writes `RESULT_RETURNED` `AuditLog` row per result with feedback and department ID.
+  - `reopenResults`: validates reopening justification (3–500 chars). Conditional `updateMany` transitioning results from `APPROVED` to `RETURNED`, setting `reopenedById`, `reopenedAt`, and `reopenReason`. Writes `RESULT_REOPENED` `AuditLog` row per result with reason and department ID.
+  - `getResultHistory`: retrieves full chronological audit trail for a result row, scoped to authorized admins and assigned lecturers. Enforces Decision D3: admins never see `RESULT_DRAFT_SAVED` audit logs.
+- **REST Route Handlers (`src/app/api/v1/results/*`)**:
+  - `GET /api/v1/results/submissions`: submissions listing with semester selector.
+  - `POST /api/v1/results/approve`: batch result approval with `assertSameOrigin`.
+  - `POST /api/v1/results/return`: return results for correction with `assertSameOrigin`.
+  - `POST /api/v1/results/reopen`: audited result reopening with `assertSameOrigin`.
+  - `GET /api/v1/results/[id]/history`: result lifecycle audit trail viewer.
+- **Approvals UI & Navigation (`src/components/admin/ApprovalsView.tsx`, `/dept-admin/approvals`, `/super-admin/approvals`)**:
+  - Shared `ApprovalsView` component mounted under `/dept-admin/approvals` (scoped to admin's department) and `/super-admin/approvals` (all departments).
+  - Features: semester dropdown, submissions table with counts (registered, submitted, approved, returned) and status chips, drill-down into full course score sheet, approve-all confirmation dialog, return-for-correction dialog with feedback input, reopen dialog with mandatory reason input, and per-row audit history modal showing chronological events, actors, and reasons.
+  - Dashboard cards for "Results Awaiting Approval" in `/dept-admin` and `/super-admin` linked to the approvals page.
+  - Navigation updated in `src/components/layout/PortalShell.tsx` for `DEPARTMENT_ADMIN` and `SUPER_ADMIN`.
+- **RBAC Integration Suite (`tests/rbac/results-approval.test.ts`)**:
+  - 16 automated integration tests covering 401 unauthenticated requests, 403 for Student and Lecturer, 403 on foreign Origin, D3 hidden drafts in admin submissions and sheets, department scoping (MTH admin cannot touch CSC course; CSC admin cannot touch MTH course), return validation (<3 chars -> 400), lecturer modification and resubmission, concurrent `Promise.all` race safety (conditional count match check), repeat approval rejection (409), reopening validation (<3 chars -> 400), Super Admin university-wide approval, and `/history` scoping and chronological order.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/server/services/result-approval.service.ts`
+- `src/app/api/v1/results/submissions/route.ts`
+- `src/app/api/v1/results/approve/route.ts`
+- `src/app/api/v1/results/return/route.ts`
+- `src/app/api/v1/results/reopen/route.ts`
+- `src/app/api/v1/results/[id]/history/route.ts`
+- `src/components/admin/ApprovalsView.tsx`
+- `src/app/(portal)/dept-admin/approvals/page.tsx`
+- `src/app/(portal)/super-admin/approvals/page.tsx`
+- `src/app/(portal)/dept-admin/page.tsx`
+- `src/app/(portal)/super-admin/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/rbac/results-approval.test.ts`
+
+### Known Gaps
+- Student results view, semester GPA/CGPA summary, printable result slip, audit log viewer, and administrative oversight (Phase 7b) are built next.
 
 
 
