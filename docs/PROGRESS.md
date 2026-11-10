@@ -216,6 +216,44 @@
 ### Known Gaps
 - None for Phase 3. Courses, course assignments, and Department Admin student/lecturer management are scheduled for Phase 4 per Decision D1.
 
+---
+
+## Phase 4a: Courses and Course Assignments
+
+### What Was Built
+- **Decision D12 (`docs/DECISIONS.md`)**:
+  - Documented the one-lecturer-per-course-per-semester rule (`409` if an assignment already exists; unassign first, which is blocked with `409` if any `Result` rows exist for that course and semester).
+- **Strict Course & Assignment Validators (`src/lib/validators/course.ts`, `tests/unit/course-validators.test.ts`)**:
+  - Added pure function `normalizeCourseCode` (`"csc  301"` -> `"CSC 301"`) and `.strict()` Zod schemas `listCoursesQuerySchema`, `createCourseSchema`, `updateCourseSchema`, `listCourseAssignmentsQuerySchema`, and `createCourseAssignmentSchema`.
+- **Course & Assignment Services (`src/server/services/{course,course-assignment}.service.ts`)**:
+  - `course.service.ts`: scoped `listCourses` (`SUPER_ADMIN` all, `DEPARTMENT_ADMIN` own department, `LECTURER` assigned courses only, `STUDENT` `403`), `createCourse`, and `updateCourse` with structural immutability guards (`409` if changing `departmentId`, `programId`, `levelId`, or `semesterName` when assignments/registrations/results exist, or `creditUnits` when results exist).
+  - `course-assignment.service.ts`: scoped `listCourseAssignments`, `createCourseAssignment` (`COURSE_ASSIGNED`, enforcing department match, semester match, current session, active course & lecturer, and Decision D12 single lecturer per course/semester), and `deleteCourseAssignment` (`COURSE_UNASSIGNED`, blocking with `409` if results exist).
+- **REST Endpoints (`/api/v1/courses*`, `/api/v1/course-assignments*`)**:
+  - `GET/POST /api/v1/courses` & `PATCH /api/v1/courses/[id]`
+  - `GET/POST /api/v1/course-assignments` & `DELETE /api/v1/course-assignments/[id]`
+- **Shared CoursesManager UI (`src/components/admin/CoursesManager.tsx`)**:
+  - Mounted at `/super-admin/courses` and `/dept-admin/courses`, and added `"Courses"` to `PortalShell.tsx` under both `SUPER_ADMIN` and `DEPARTMENT_ADMIN`.
+
+### Files Added / Modified
+- `docs/DECISIONS.md`
+- `docs/PROGRESS.md`
+- `src/lib/validators/course.ts`
+- `src/server/services/course.service.ts`
+- `src/server/services/course-assignment.service.ts`
+- `src/app/api/v1/courses/route.ts`
+- `src/app/api/v1/courses/[id]/route.ts`
+- `src/app/api/v1/course-assignments/route.ts`
+- `src/app/api/v1/course-assignments/[id]/route.ts`
+- `src/components/admin/CoursesManager.tsx`
+- `src/app/(portal)/super-admin/courses/page.tsx`
+- `src/app/(portal)/dept-admin/courses/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/unit/course-validators.test.ts`
+
+### Known Gaps
+- Phase 4b (Department Admin students, lecturers, programs, dashboard, and `tests/rbac/dept-scope.test.ts`) is implemented in the next commit.
+
+
 
 
 

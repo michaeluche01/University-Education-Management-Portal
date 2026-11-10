@@ -23,12 +23,16 @@ export interface NavItem {
 const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   STUDENT: [{ label: "Dashboard", href: "/student" }],
   LECTURER: [{ label: "Dashboard", href: "/lecturer" }],
-  DEPARTMENT_ADMIN: [{ label: "Dashboard", href: "/dept-admin" }],
+  DEPARTMENT_ADMIN: [
+    { label: "Dashboard", href: "/dept-admin" },
+    { label: "Courses", href: "/dept-admin/courses" },
+  ],
   SUPER_ADMIN: [
     { label: "Dashboard", href: "/super-admin" },
     { label: "Faculties", href: "/super-admin/faculties" },
     { label: "Departments", href: "/super-admin/departments" },
     { label: "Programs & Levels", href: "/super-admin/programs" },
+    { label: "Courses", href: "/super-admin/courses" },
     { label: "Sessions & Semesters", href: "/super-admin/sessions" },
     { label: "Grade Scale", href: "/super-admin/grade-scale" },
     { label: "Users", href: "/super-admin/users" },

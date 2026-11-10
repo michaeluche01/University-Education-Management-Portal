@@ -11,4 +11,6 @@ D8 A change-password endpoint exists (PATCH /api/v1/auth/password). Admin-create
 D9 Seed (Phase 2) must include a previous session 2024/2025 with APPROVED results for 200/300-level students so CGPA and history are meaningful, and every workflow must be demonstrable from a clean seed: one student with zero current registrations, one course with registered students and no results, one course with SUBMITTED results awaiting approval, one RETURNED result with feedback.
 D10 Result.studentId/courseId/semesterId are always copied from the registration in the service, never accepted from the client.
 D11 Audit log is append-only: no update or delete code paths. A DB trigger enforcing this is added in Phase 7.
+D12 One lecturer per course per semester: creating a course assignment when another lecturer is already assigned to that course and semester returns 409 Conflict; to change the assigned lecturer, unassign the existing assignment first (which is blocked with 409 if any Result rows exist for that course and semester).
+
 
