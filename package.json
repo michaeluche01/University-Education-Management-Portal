@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:rbac": "vitest run tests/rbac",
     "postinstall": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:prod": "node -e \"if (process.env.CONFIRM_PROD !== 'yes') { console.error('Refusing to run against production: set CONFIRM_PROD=yes'); process.exit(1); }\" && dotenv -e .env.production -- prisma migrate deploy",
