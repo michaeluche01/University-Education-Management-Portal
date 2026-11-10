@@ -24,7 +24,14 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   STUDENT: [{ label: "Dashboard", href: "/student" }],
   LECTURER: [{ label: "Dashboard", href: "/lecturer" }],
   DEPARTMENT_ADMIN: [{ label: "Dashboard", href: "/dept-admin" }],
-  SUPER_ADMIN: [{ label: "Dashboard", href: "/super-admin" }],
+  SUPER_ADMIN: [
+    { label: "Dashboard", href: "/super-admin" },
+    { label: "Faculties", href: "/super-admin/faculties" },
+    { label: "Departments", href: "/super-admin/departments" },
+    { label: "Programs & Levels", href: "/super-admin/programs" },
+    { label: "Sessions & Semesters", href: "/super-admin/sessions" },
+    { label: "Grade Scale", href: "/super-admin/grade-scale" },
+  ],
 };
 
 const ROLE_LABELS: Record<Role, string> = {

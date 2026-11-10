@@ -111,5 +111,66 @@
 - None for Phase 2. Phase 3+ screens and endpoints are scheduled for subsequent phases per Decision D1.
 - **Regression Fix (`fix: login/logout stuck loading state`)**: With Next.js 16 `cacheComponents: true`, client pages remain mounted inside hidden `<Activity>` boundaries across client-side navigations. Previously, `LoginPage` only called `setSubmitting(false)` on error and used `router.push(dashboardPath)` on success, while `PortalShell.handleLogout` used `router.push("/login")`, restoring the cached `LoginPage` instance with `submitting === true` and stale `email`/`password` state. Fixed by wrapping `LoginPage.handleSubmit` in `try/catch/finally` (always resetting `submitting` and clearing `password`, plus clearing `email` and calling `router.replace(dashboardPath)` on success) and changing `PortalShell.handleLogout` to use `window.location.assign("/login")` inside `try/catch/finally`.
 
+---
+
+## Phase 3a: Super Admin Structure Management
+
+### What Was Built
+- **Prisma Error Mapping (`src/lib/errors.ts`)**:
+  - Updated `handleApiError` to map Prisma `P2002` to `409 CONFLICT_DUPLICATE ("A record with this value already exists.")`, `P2003` / `P2014` to `409 CONFLICT_IN_USE ("Record is in use by other records.")`, and `P2025` to `404 NOT_FOUND`.
+- **Structure Validators & Pure Functions (`src/lib/validators/structure.ts`, `tests/unit/structure-validators.test.ts`)**:
+  - Added Zod schemas for faculties, departments, programs (`B.Sc.`/`B.Eng.`/`B.Tech.`/`B.A.`), global academic levels (`100`–`900`, multiples of `100`), academic sessions (`validateSessionName` enforcing `YYYY/YYYY+1` and `startDate < endDate`), semesters (`isCurrent !== false`), and grade scale replacement (`validateAndDeriveGradeScale` enforcing >= 2 bands, `minScore: 0` band, unique grades/minScores, monotonic `gradePoint`, and derived `maxScore`).
+- **Session-Scoped Services (`src/server/services/*`)**:
+  - `faculty.service.ts`, `department.service.ts`, `program.service.ts` (enforcing `assertDepartmentScope` for Phase 4 reuse), `level.service.ts`, `session.service.ts` (auto-creating `FIRST` and `SECOND` semesters on session creation and clearing old `isCurrent` rows inside transactions), `grade-scale.service.ts` (writing `GRADE_SCALE_UPDATED` audit log), and `admin-dashboard.service.ts` (8 real DB stat counts).
+- **REST Endpoints (`/api/v1/*`)**:
+  - `GET/POST /api/v1/faculties` & `PATCH /api/v1/faculties/[id]`
+  - `GET/POST /api/v1/departments` & `PATCH /api/v1/departments/[id]`
+  - `GET/POST /api/v1/programs` & `PATCH /api/v1/programs/[id]`
+  - `GET/POST /api/v1/levels`
+  - `GET/POST /api/v1/sessions` & `PATCH /api/v1/sessions/[id]`
+  - `PATCH /api/v1/semesters/[id]`
+  - `GET/PUT /api/v1/grade-scale`
+- **Super Admin UI & Navigation (`src/app/(portal)/super-admin/*`, `src/components/layout/PortalShell.tsx`)**:
+  - Updated `/super-admin` dashboard with 8 live DB stat cards.
+  - Built `/super-admin/faculties`, `/super-admin/departments`, `/super-admin/programs` (with global Academic Levels section), `/super-admin/sessions` (with nested semesters, "Make current", and registration toggle confirmation dialog), and `/super-admin/grade-scale` (with live validation and Reset to default 5.0 scale).
+- **RBAC Integration Suite (`tests/rbac/structure.test.ts`)**:
+  - 28 integration tests covering 401/403 on all mutations, foreign `Origin` rejection, `DEPARTMENT_ADMIN` read scoping, `SUPER_ADMIN` CRUD + `409` duplicate handling, single `isCurrent` session/semester invariant, and grade scale validation/derivation.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/lib/errors.ts`
+- `src/lib/validators/structure.ts`
+- `src/server/services/faculty.service.ts`
+- `src/server/services/department.service.ts`
+- `src/server/services/program.service.ts`
+- `src/server/services/level.service.ts`
+- `src/server/services/session.service.ts`
+- `src/server/services/grade-scale.service.ts`
+- `src/server/services/admin-dashboard.service.ts`
+- `src/app/api/v1/faculties/route.ts`
+- `src/app/api/v1/faculties/[id]/route.ts`
+- `src/app/api/v1/departments/route.ts`
+- `src/app/api/v1/departments/[id]/route.ts`
+- `src/app/api/v1/programs/route.ts`
+- `src/app/api/v1/programs/[id]/route.ts`
+- `src/app/api/v1/levels/route.ts`
+- `src/app/api/v1/sessions/route.ts`
+- `src/app/api/v1/sessions/[id]/route.ts`
+- `src/app/api/v1/semesters/[id]/route.ts`
+- `src/app/api/v1/grade-scale/route.ts`
+- `src/components/layout/PortalShell.tsx`
+- `src/app/(portal)/super-admin/page.tsx`
+- `src/app/(portal)/super-admin/faculties/page.tsx`
+- `src/app/(portal)/super-admin/departments/page.tsx`
+- `src/app/(portal)/super-admin/programs/page.tsx`
+- `src/app/(portal)/super-admin/sessions/page.tsx`
+- `src/app/(portal)/super-admin/grade-scale/page.tsx`
+- `tests/unit/structure-validators.test.ts`
+- `tests/rbac/structure.test.ts`
+
+### Known Gaps
+- Phase 3b (Users Management) is implemented in the next commit.
+
+
 
 

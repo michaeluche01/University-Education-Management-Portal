@@ -29,6 +29,18 @@ export function okResponse<T>(data: T, status = 200): NextResponse {
   return NextResponse.json({ data }, { status });
 }
 
+function getPrismaErrorCode(error: unknown): string | null {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof (error as { code: unknown }).code === "string"
+  ) {
+    return (error as { code: string }).code;
+  }
+  return null;
+}
+
 export function handleApiError(error: unknown): NextResponse {
   if (error instanceof AppError) {
     const body: {
@@ -66,6 +78,43 @@ export function handleApiError(error: unknown): NextResponse {
     );
   }
 
+  const prismaCode = getPrismaErrorCode(error);
+  if (prismaCode === "P2002") {
+    return NextResponse.json(
+      {
+        error: {
+          code: "CONFLICT_DUPLICATE",
+          message: "A record with this value already exists.",
+        },
+      },
+      { status: 409 }
+    );
+  }
+
+  if (prismaCode === "P2003" || prismaCode === "P2014") {
+    return NextResponse.json(
+      {
+        error: {
+          code: "CONFLICT_IN_USE",
+          message: "Record is in use by other records.",
+        },
+      },
+      { status: 409 }
+    );
+  }
+
+  if (prismaCode === "P2025") {
+    return NextResponse.json(
+      {
+        error: {
+          code: "NOT_FOUND",
+          message: "Record not found.",
+        },
+      },
+      { status: 404 }
+    );
+  }
+
   console.error("[API Unhandled Error]:", error);
   return NextResponse.json(
     {
@@ -77,4 +126,3 @@ export function handleApiError(error: unknown): NextResponse {
     { status: 500 }
   );
 }
-

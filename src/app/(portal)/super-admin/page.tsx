@@ -1,45 +1,110 @@
+import {
+  BookOpen,
+  Building2,
+  Calendar,
+  CheckCircle2,
+  ClipboardList,
+  GraduationCap,
+  Landmark,
+  Users,
+} from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { requireRole } from "@/server/auth/rbac";
+import { getSuperAdminDashboardStats } from "@/server/services/admin-dashboard.service";
 
 export default async function SuperAdminDashboardPage() {
   const session = await requireRole(["SUPER_ADMIN"]);
+  const stats = await getSuperAdminDashboardStats(session);
+
+  const statCards = [
+    {
+      label: "Faculties",
+      value: stats.facultiesCount,
+      subtext: "Academic faculties",
+      icon: Landmark,
+    },
+    {
+      label: "Departments",
+      value: stats.departmentsCount,
+      subtext: "Across all faculties",
+      icon: Building2,
+    },
+    {
+      label: "Programs",
+      value: stats.programsCount,
+      subtext: "Degree programs",
+      icon: BookOpen,
+    },
+    {
+      label: "Students",
+      value: stats.studentsCount,
+      subtext: "Enrolled students",
+      icon: GraduationCap,
+    },
+    {
+      label: "Lecturers",
+      value: stats.lecturersCount,
+      subtext: "Academic staff",
+      icon: Users,
+    },
+    {
+      label: "Current Session & Semester",
+      value: `${stats.currentSessionName} (${stats.currentSemesterName})`,
+      subtext: stats.registrationOpen
+        ? "Course registration OPEN"
+        : "Course registration CLOSED",
+      icon: Calendar,
+    },
+    {
+      label: "Registrations This Semester",
+      value: stats.registrationsThisSemester,
+      subtext: `In ${stats.currentSessionName} ${stats.currentSemesterName}`,
+      icon: ClipboardList,
+    },
+    {
+      label: "Results Awaiting Approval",
+      value: stats.resultsAwaitingApproval,
+      subtext: "Submitted results pending review",
+      icon: CheckCircle2,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader
         title={`Welcome, ${session.fullName}`}
-        description="University-Wide Administration Portal"
+        description="University-wide academic structure and operational overview."
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>System Oversight</CardTitle>
-          <CardDescription>
-            Full university-wide administrative access across all faculties,
-            departments, programs, sessions, and users.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 text-sm">
-          <div>
-            <div className="text-muted-foreground">Administrator Email</div>
-            <div className="font-semibold mt-0.5">{session.email}</div>
-          </div>
-          <div>
-            <div className="text-muted-foreground">Scope</div>
-            <div className="font-semibold mt-0.5">
-              University-Wide (All Faculties & Departments)
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardDescription className="text-xs font-medium">
+                  {item.label}
+                </CardDescription>
+                <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+                  {item.value}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {item.subtext}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
-
