@@ -145,3 +145,4 @@ export const createCourseAssignmentSchema = z
 export type CreateCourseAssignmentInput = z.infer<
   typeof createCourseAssignmentSchema
 >;
+

@@ -61,3 +61,83 @@ export async function getSuperAdminDashboardStats(session: SessionContext) {
   };
 }
 
+export async function getDeptAdminDashboardStats(session: SessionContext) {
+  if (session.role !== "DEPARTMENT_ADMIN" || !session.departmentId) {
+    throw new AppError(403, "FORBIDDEN", "Department Admin access required.");
+  }
+
+  const departmentId = session.departmentId;
+
+  const [
+    studentsCount,
+    lecturersCount,
+    activeCoursesCount,
+    programsCount,
+    currentSession,
+    currentSemester,
+    submittedResultsAwaitingApproval,
+  ] = await Promise.all([
+    prisma.student.count({ where: { departmentId } }),
+    prisma.lecturer.count({ where: { departmentId } }),
+    prisma.course.count({ where: { departmentId, isActive: true } }),
+    prisma.program.count({ where: { departmentId } }),
+    prisma.academicSession.findFirst({
+      where: { isCurrent: true },
+      select: { id: true, name: true },
+    }),
+    prisma.semester.findFirst({
+      where: { isCurrent: true },
+      select: {
+        id: true,
+        name: true,
+        registrationOpen: true,
+        session: { select: { id: true, name: true } },
+      },
+    }),
+    prisma.result.count({
+      where: {
+        status: "SUBMITTED",
+        course: { departmentId },
+      },
+    }),
+  ]);
+
+  const [registrationsThisSemester, unassignedCoursesThisSemester] =
+    currentSemester
+      ? await Promise.all([
+          prisma.courseRegistration.count({
+            where: {
+              semesterId: currentSemester.id,
+              course: { departmentId },
+            },
+          }),
+          prisma.course.count({
+            where: {
+              departmentId,
+              isActive: true,
+              semesterName: currentSemester.name,
+              assignments: {
+                none: {
+                  semesterId: currentSemester.id,
+                },
+              },
+            },
+          }),
+        ])
+      : [0, 0];
+
+  return {
+    studentsCount,
+    lecturersCount,
+    activeCoursesCount,
+    programsCount,
+    registrationsThisSemester,
+    submittedResultsAwaitingApproval,
+    unassignedCoursesThisSemester,
+    currentSessionName:
+      currentSession?.name ?? currentSemester?.session.name ?? "None",
+    currentSemesterName: currentSemester?.name ?? "None",
+    registrationOpen: currentSemester?.registrationOpen ?? false,
+  };
+}
+

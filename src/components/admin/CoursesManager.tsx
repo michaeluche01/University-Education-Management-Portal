@@ -1063,3 +1063,4 @@ export function CoursesManager({ role }: CoursesManagerProps) {
     </div>
   );
 }
+

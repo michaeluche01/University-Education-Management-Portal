@@ -251,7 +251,58 @@
 - `tests/unit/course-validators.test.ts`
 
 ### Known Gaps
-- Phase 4b (Department Admin students, lecturers, programs, dashboard, and `tests/rbac/dept-scope.test.ts`) is implemented in the next commit.
+- None for Phase 4a.
+
+---
+
+## Phase 4b: Department Admin Module & Scope Isolation
+
+### What Was Built
+- **Department Admin Program Mutations (`src/lib/validators/structure.ts`, `src/server/services/program.service.ts`, `src/app/api/v1/programs*`)**:
+  - Made `createProgramSchema` and `updateProgramSchema` `.strict()` with optional `departmentId` on create so `DEPARTMENT_ADMIN` is forced to their own department (`403` if another department is supplied).
+  - Opened `POST /api/v1/programs` and `PATCH /api/v1/programs/[id]` to `DEPARTMENT_ADMIN` within their own department.
+- **Strict Student & Lecturer Validators & Services (`src/lib/validators/member.ts`, `src/server/services/{student,lecturer}.service.ts`)**:
+  - `.strict()` Zod schemas for listing, creating (`User` + profile in one transaction with `USER_CREATED` audit), and updating (`USER_UPDATED` audit) students and lecturers by profile ID (`Student.id` / `Lecturer.id`), rejecting unknown/forbidden fields (`role`, `email`, `status`, `password`, `matricNumber`, `staffId`, `departmentId`) with `400`.
+  - Enforced `assertDepartmentScope` (`403` for out-of-scope `GET`/`PATCH`), program-belongs-to-department validation (`400`), and immutability of `programId` when registrations or results exist (`409`).
+- **REST Endpoints (`/api/v1/students*`, `/api/v1/lecturers*`)**:
+  - `GET/POST /api/v1/students` & `GET/PATCH /api/v1/students/[id]`
+  - `GET/POST /api/v1/lecturers` & `GET/PATCH /api/v1/lecturers/[id]`
+- **Department Admin Dashboard & Shared Manager UIs**:
+  - `getDeptAdminDashboardStats` in `src/server/services/admin-dashboard.service.ts` and 7 stat cards in `/dept-admin` (`src/app/(portal)/dept-admin/page.tsx`).
+  - Shared `ProgramsManager` (`src/components/admin/ProgramsManager.tsx`) mounted at `/super-admin/programs` and `/dept-admin/programs`.
+  - Shared `StudentsManager` (`src/components/admin/StudentsManager.tsx`) mounted at `/dept-admin/students`.
+  - Shared `LecturersManager` (`src/components/admin/LecturersManager.tsx`) mounted at `/dept-admin/lecturers`.
+  - Added `"Programs"`, `"Students"`, and `"Lecturers"` to `DEPARTMENT_ADMIN` navigation in `src/components/layout/PortalShell.tsx`.
+- **Department Scope RBAC Suite (`tests/rbac/dept-scope.test.ts`)**:
+  - 30 integration tests covering `401`/`403`/foreign `Origin` (`403`), course creation/normalisation/duplicate (`409`)/structural immutability (`409`), lecturer assigned courses view, D12 single-lecturer per course/semester (`409`), cross-department lecturer assignment (`403`), semester mismatch (`400`), result-in-use unassign block (`409`), and CSC vs MTH isolation on programs, students, and lecturers.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/lib/validators/structure.ts`
+- `src/lib/validators/member.ts`
+- `src/server/services/program.service.ts`
+- `src/server/services/student.service.ts`
+- `src/server/services/lecturer.service.ts`
+- `src/server/services/admin-dashboard.service.ts`
+- `src/app/api/v1/programs/route.ts`
+- `src/app/api/v1/programs/[id]/route.ts`
+- `src/app/api/v1/students/route.ts`
+- `src/app/api/v1/students/[id]/route.ts`
+- `src/app/api/v1/lecturers/route.ts`
+- `src/app/api/v1/lecturers/[id]/route.ts`
+- `src/components/admin/ProgramsManager.tsx`
+- `src/components/admin/StudentsManager.tsx`
+- `src/components/admin/LecturersManager.tsx`
+- `src/app/(portal)/super-admin/programs/page.tsx`
+- `src/app/(portal)/dept-admin/page.tsx`
+- `src/app/(portal)/dept-admin/programs/page.tsx`
+- `src/app/(portal)/dept-admin/students/page.tsx`
+- `src/app/(portal)/dept-admin/lecturers/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/rbac/dept-scope.test.ts`
+
+### Known Gaps
+- None for Phase 4. Phase 5 (Student Course Registration, Profile, Print Slip, and Admin Registration Views) is next.
 
 
 

@@ -8,10 +8,19 @@ import type { SessionContext } from "@/server/auth/rbac";
 import { prisma } from "@/server/db/prisma";
 import { writeAudit } from "@/server/services/audit.service";
 
+const TX_OPTIONS = {
+  timeout: 15000,
+  maxWait: 10000,
+} as const;
+
 export async function listPrograms(
   session: SessionContext,
   filters?: { departmentId?: string }
 ) {
+  if (session.role === "DEPARTMENT_ADMIN" && filters?.departmentId) {
+    assertDepartmentScope(session, filters.departmentId);
+  }
+
   const where =
     session.role === "SUPER_ADMIN"
       ? {
@@ -19,9 +28,15 @@ export async function listPrograms(
             ? { departmentId: filters.departmentId }
             : {}),
         }
-      : {
-          departmentId: session.departmentId ?? "__none__",
-        };
+      : session.role === "DEPARTMENT_ADMIN"
+        ? {
+            departmentId: session.departmentId ?? "__none__",
+          }
+        : {
+            ...(filters?.departmentId
+              ? { departmentId: filters.departmentId }
+              : {}),
+          };
 
   return prisma.program.findMany({
     where,
@@ -46,12 +61,40 @@ export async function createProgram(
   session: SessionContext,
   input: CreateProgramInput
 ) {
-  // Enforces department scope for DEPARTMENT_ADMIN (Phase 4) while allowing SUPER_ADMIN globally
-  assertDepartmentScope(session, input.departmentId);
+  if (
+    session.role !== "SUPER_ADMIN" &&
+    session.role !== "DEPARTMENT_ADMIN"
+  ) {
+    throw new AppError(403, "FORBIDDEN", "Insufficient permissions.");
+  }
+
+  let effectiveDepartmentId: string;
+  if (session.role === "DEPARTMENT_ADMIN") {
+    if (input.departmentId) {
+      assertDepartmentScope(session, input.departmentId);
+    }
+    if (!session.departmentId) {
+      throw new AppError(
+        403,
+        "FORBIDDEN_DEPARTMENT_SCOPE",
+        "No department assigned to session."
+      );
+    }
+    effectiveDepartmentId = session.departmentId;
+  } else {
+    if (!input.departmentId) {
+      throw new AppError(
+        400,
+        "VALIDATION_ERROR",
+        "Department is required when creating a program."
+      );
+    }
+    effectiveDepartmentId = input.departmentId;
+  }
 
   return prisma.$transaction(async (tx) => {
     const department = await tx.department.findUnique({
-      where: { id: input.departmentId },
+      where: { id: effectiveDepartmentId },
       select: { id: true },
     });
     if (!department) {
@@ -63,7 +106,7 @@ export async function createProgram(
         name: input.name,
         code: input.code,
         durationYears: input.durationYears,
-        departmentId: input.departmentId,
+        departmentId: effectiveDepartmentId,
       },
       include: {
         department: {
@@ -88,7 +131,7 @@ export async function createProgram(
     });
 
     return created;
-  });
+  }, TX_OPTIONS);
 }
 
 export async function updateProgram(
@@ -96,6 +139,13 @@ export async function updateProgram(
   id: string,
   input: UpdateProgramInput
 ) {
+  if (
+    session.role !== "SUPER_ADMIN" &&
+    session.role !== "DEPARTMENT_ADMIN"
+  ) {
+    throw new AppError(403, "FORBIDDEN", "Insufficient permissions.");
+  }
+
   return prisma.$transaction(async (tx) => {
     const existing = await tx.program.findUnique({ where: { id } });
     if (!existing) {
@@ -162,6 +212,6 @@ export async function updateProgram(
     });
 
     return updated;
-  });
+  }, TX_OPTIONS);
 }
 

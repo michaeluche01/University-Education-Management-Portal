@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     assertSameOrigin(request);
-    const session = await requireRole(["SUPER_ADMIN"]);
+    const session = await requireRole(["SUPER_ADMIN", "DEPARTMENT_ADMIN"]);
     const body = await request.json();
     const parsed = createProgramSchema.parse(body);
 

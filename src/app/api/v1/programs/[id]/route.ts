@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   try {
     assertSameOrigin(request);
-    const session = await requireRole(["SUPER_ADMIN"]);
+    const session = await requireRole(["SUPER_ADMIN", "DEPARTMENT_ADMIN"]);
     const { id } = await context.params;
     const body = await request.json();
     const parsed = updateProgramSchema.parse(body);

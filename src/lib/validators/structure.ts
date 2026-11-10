@@ -62,29 +62,61 @@ export type UpdateDepartmentInput = z.infer<typeof updateDepartmentSchema>;
 // ============================================================================
 // Programs
 // ============================================================================
-export const createProgramSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, "Program name must be at least 2 characters")
-    .max(120, "Program name is too long"),
-  code: z
-    .string()
-    .trim()
-    .min(2, "Program code must be at least 2 characters")
-    .max(20, "Program code must be at most 20 characters")
-    .transform((v) => v.toUpperCase()),
-  durationYears: z.coerce
-    .number()
-    .int("Duration must be a whole number")
-    .min(1, "Duration must be at least 1 year")
-    .max(10, "Duration must be at most 10 years")
-    .default(4),
-  departmentId: z.string().trim().min(1, "Department is required"),
-});
+export const createProgramSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Program name must be at least 2 characters")
+      .max(120, "Program name is too long"),
+    code: z
+      .string()
+      .trim()
+      .min(2, "Program code must be at least 2 characters")
+      .max(20, "Program code must be at most 20 characters")
+      .transform((v) => v.toUpperCase()),
+    durationYears: z.coerce
+      .number()
+      .int("Duration must be a whole number")
+      .min(1, "Duration must be at least 1 year")
+      .max(10, "Duration must be at most 10 years")
+      .default(4),
+    departmentId: z
+      .string()
+      .trim()
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+  })
+  .strict();
 
-export const updateProgramSchema = createProgramSchema
-  .partial()
+export const updateProgramSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(2, "Program name must be at least 2 characters")
+      .max(120, "Program name is too long")
+      .optional(),
+    code: z
+      .string()
+      .trim()
+      .min(2, "Program code must be at least 2 characters")
+      .max(20, "Program code must be at most 20 characters")
+      .transform((v) => v.toUpperCase())
+      .optional(),
+    durationYears: z.coerce
+      .number()
+      .int("Duration must be a whole number")
+      .min(1, "Duration must be at least 1 year")
+      .max(10, "Duration must be at most 10 years")
+      .optional(),
+    departmentId: z
+      .string()
+      .trim()
+      .min(1, "Department cannot be empty")
+      .optional(),
+  })
+  .strict()
   .refine((data) => Object.keys(data).length > 0, {
     message: "At least one field must be provided for update",
   });
