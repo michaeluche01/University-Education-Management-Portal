@@ -169,7 +169,53 @@
 - `tests/rbac/structure.test.ts`
 
 ### Known Gaps
-- Phase 3b (Users Management) is implemented in the next commit.
+- None for Phase 3a.
+
+---
+
+## Phase 3b: Super Admin Users Management
+
+### What Was Built
+- **User Validators (`src/lib/validators/user.ts`)**:
+  - `listUsersQuerySchema` (`page`, `pageSize` max 50, `role`, `status`, `departmentId`, `search`).
+  - `createUserSchema` (lowercased `email`, `fullName`, `phone`, temporary `password` min 8 chars, `role`, and role-conditional profile fields with uppercased `matricNumber`/`staffId`).
+  - `updateUserSchema`, `updateUserStatusSchema`, `updateUserRoleSchema` (enforcing Decision D6: never to/from `STUDENT`, requiring `departmentId` and `staffId` for `LECTURER` and `DEPARTMENT_ADMIN`), and `resetUserPasswordSchema`.
+- **Scoped Profile & User Services (`src/server/services/{student,lecturer,user}.service.ts`)**:
+  - `SAFE_USER_SELECT` & `serializeUser` ensuring `passwordHash`, `failedLoginCount`, and `lockedUntil` are never selected or returned in API responses.
+  - `student.service.ts` (`validateStudentDepartmentProgramLevel`, `assertCanMoveStudentDepartmentOrProgram`, `listStudentsScoped`) and `lecturer.service.ts` (`assertCanMoveLecturerDepartment`, `assertCanConvertFromLecturer`, `listLecturersScoped`) reusable by `DEPARTMENT_ADMIN` in Phase 4.
+  - `user.service.ts`: `listUsers`, `createUser` (`USER_CREATED`), `updateUser` (`USER_UPDATED`), `updateUserStatus` (`USER_STATUS_CHANGED`, self-guard + last-active-`SUPER_ADMIN` guard + lockout reset on `ACTIVE`), `updateUserRole` (`USER_ROLE_CHANGED`, Decision D6 enforcement), and `adminResetUserPassword` (`USER_PASSWORD_CHANGED`).
+- **REST Endpoints (`/api/v1/users*`)**:
+  - `GET/POST /api/v1/users`
+  - `PATCH /api/v1/users/[id]`
+  - `PATCH /api/v1/users/[id]/status`
+  - `PATCH /api/v1/users/[id]/role`
+  - `PATCH /api/v1/users/[id]/password`
+- **Super Admin Users UI (`/super-admin/users`)**:
+  - Added `"Users"` link to `PortalShell.tsx` under `SUPER_ADMIN`.
+  - Built `/super-admin/users` with search, role/status/department filters, pagination, dynamic role-aware Create User dialog (filtering programs by selected department), Edit User dialog, Change Status dialog (with audit reason), Change Role dialog (for non-student rows), and Reset Password dialog.
+- **RBAC Integration Suite (`tests/rbac/users.test.ts`, `vitest.config.mts`)**:
+  - 16 integration tests covering `401`/`403` on all `/api/v1/users*` endpoints, paginated list without sensitive fields, creating student & lecturer, duplicate email/matric (`409`), program/department mismatch (`400`), suspend (`login -> 403`) & reactivate (`login -> 200`), self-status & last-active-super-admin guards, password reset, and Decision D6 role conversion rules.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `vitest.config.mts`
+- `src/server/db/prisma.ts`
+- `src/lib/validators/user.ts`
+- `src/server/services/student.service.ts`
+- `src/server/services/lecturer.service.ts`
+- `src/server/services/user.service.ts`
+- `src/app/api/v1/users/route.ts`
+- `src/app/api/v1/users/[id]/route.ts`
+- `src/app/api/v1/users/[id]/status/route.ts`
+- `src/app/api/v1/users/[id]/role/route.ts`
+- `src/app/api/v1/users/[id]/password/route.ts`
+- `src/components/layout/PortalShell.tsx`
+- `src/app/(portal)/super-admin/users/page.tsx`
+- `tests/rbac/users.test.ts`
+
+### Known Gaps
+- None for Phase 3. Courses, course assignments, and Department Admin student/lecturer management are scheduled for Phase 4 per Decision D1.
+
 
 
 

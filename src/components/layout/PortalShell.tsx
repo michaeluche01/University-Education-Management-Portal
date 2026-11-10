@@ -31,6 +31,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Programs & Levels", href: "/super-admin/programs" },
     { label: "Sessions & Semesters", href: "/super-admin/sessions" },
     { label: "Grade Scale", href: "/super-admin/grade-scale" },
+    { label: "Users", href: "/super-admin/users" },
   ],
 };
 
