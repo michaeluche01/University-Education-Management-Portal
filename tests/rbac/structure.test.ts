@@ -143,7 +143,7 @@ describe("Phase 3a Structure Management RBAC & API Suite", { timeout: 60000 }, (
       { method: "PATCH", path: "/api/v1/faculties/dummy-id", body: { name: "Updated" } },
       { method: "POST", path: "/api/v1/departments", body: { code: "D1", name: "Test Dept", facultyId: "f1" } },
       { method: "PATCH", path: "/api/v1/departments/dummy-id", body: { name: "Updated" } },
-      { method: "POST", path: "/api/v1/programs", body: { code: "P1", name: "Test Prog", degreeType: "B.Sc.", durationYears: 4, departmentId: "d1" } },
+      { method: "POST", path: "/api/v1/programs", body: { code: "P1", name: "Test Prog", durationYears: 4, departmentId: "d1" } },
       { method: "PATCH", path: "/api/v1/programs/dummy-id", body: { name: "Updated" } },
       { method: "POST", path: "/api/v1/levels", body: { levelNumber: 700, name: "700 Level" } },
       { method: "POST", path: "/api/v1/sessions", body: { name: "2090/2091", startDate: "2090-09-01", endDate: "2091-07-01" } },
@@ -315,7 +315,6 @@ describe("Phase 3a Structure Management RBAC & API Suite", { timeout: 60000 }, (
         body: JSON.stringify({
           code: progCode,
           name: `B.Sc. Test Program ${SUFFIX}`,
-          degreeType: "B.Sc.",
           durationYears: 4,
           departmentId: dept.id,
         }),

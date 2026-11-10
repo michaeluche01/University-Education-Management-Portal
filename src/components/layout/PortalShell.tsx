@@ -21,7 +21,12 @@ export interface NavItem {
 }
 
 const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
-  STUDENT: [{ label: "Dashboard", href: "/student" }],
+  STUDENT: [
+    { label: "Dashboard", href: "/student" },
+    { label: "Course Registration", href: "/student/courses" },
+    { label: "Registration Slip", href: "/student/print/registration" },
+    { label: "My Profile", href: "/student/profile" },
+  ],
   LECTURER: [{ label: "Dashboard", href: "/lecturer" }],
   DEPARTMENT_ADMIN: [
     { label: "Dashboard", href: "/dept-admin" },
@@ -29,6 +34,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Courses", href: "/dept-admin/courses" },
     { label: "Students", href: "/dept-admin/students" },
     { label: "Lecturers", href: "/dept-admin/lecturers" },
+    { label: "Registrations", href: "/dept-admin/registrations" },
   ],
   SUPER_ADMIN: [
     { label: "Dashboard", href: "/super-admin" },
@@ -36,6 +42,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Departments", href: "/super-admin/departments" },
     { label: "Programs & Levels", href: "/super-admin/programs" },
     { label: "Courses", href: "/super-admin/courses" },
+    { label: "Registrations", href: "/super-admin/registrations" },
     { label: "Sessions & Semesters", href: "/super-admin/sessions" },
     { label: "Grade Scale", href: "/super-admin/grade-scale" },
     { label: "Users", href: "/super-admin/users" },

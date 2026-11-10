@@ -302,7 +302,61 @@
 - `tests/rbac/dept-scope.test.ts`
 
 ### Known Gaps
-- None for Phase 4. Phase 5 (Student Course Registration, Profile, Print Slip, and Admin Registration Views) is next.
+- None for Phase 4.
+
+---
+
+## Phase 5: Student Course Registration, Profile, Print Slip & Admin Registration Views
+
+### What Was Built
+- **Registration Eligibility & Strict Validators (`src/lib/validators/registration.ts`, `src/lib/validators/profile.ts`, `tests/unit/registration-eligibility.test.ts`)**:
+  - Pure function `evaluateCourseEligibility(student, course, currentSemester, isAlreadyRegistered)` shared between service and unit tests.
+  - `.strict()` Zod schemas `createRegistrationBatchSchema` (1–20 unique `courseIds`) and `listRegistrationsQuerySchema`.
+  - Role-specific `.strict()` profile patch schemas (`studentProfilePatchSchema`, `lecturerProfilePatchSchema`, `adminProfilePatchSchema`) rejecting unknown/forbidden fields (`role`, `matricNumber`, `departmentId`, `levelId`, `email`, etc.) with `400`.
+- **Registration & Profile Services (`src/server/services/{registration,profile}.service.ts`)**:
+  - `getAvailableCoursesForStudent`: returns eligible active courses for the student's `departmentId`, `programId`, `levelId`, and `currentSemester.name`, marking `alreadyRegistered`, `hasResult`, and `assignedLecturerName`, plus structured `state` (`"open"`, `"registrationClosed"`, or `"noCurrentSemester"`).
+  - `registerStudentCourses`: atomic batch registration inside one `prisma.$transaction`, rejecting the entire batch with `400` if any course fails eligibility (`409` for duplicate or race condition via `@@unique([studentId, courseId, semesterId])`), and writing `REGISTRATION_CREATED` `AuditLog` per row.
+  - `dropStudentRegistration`: allows dropping own registration only when `semester.isCurrent && semester.registrationOpen && !result` (`403` for another student's row, `409` when closed or result exists), writing `REGISTRATION_DELETED` `AuditLog`.
+  - `listRegistrations`: role-aware (`STUDENT` own rows with `canDrop` and `totalCreditUnits`, `LECTURER` class list for assigned `(courseId, semesterId)` with `assertLecturerCourseAssignment` and no scores, `DEPARTMENT_ADMIN` own department, `SUPER_ADMIN` university-wide).
+  - `getOwnProfile` and `updateOwnProfile` with `USER_UPDATED` audit logging.
+- **REST Endpoints (`/api/v1/registrations*`, `/api/v1/profile`)**:
+  - `GET /api/v1/registrations/available`
+  - `GET/POST /api/v1/registrations`
+  - `DELETE /api/v1/registrations/[id]`
+  - `GET/PATCH /api/v1/profile`
+- **Student & Admin Registration UIs**:
+  - `/student` dashboard (`src/app/(portal)/student/page.tsx`)
+  - `/student/profile` (`src/app/(portal)/student/profile/page.tsx`)
+  - `/student/courses` (`src/app/(portal)/student/courses/page.tsx`)
+  - `/student/print/registration` (`src/app/(portal)/student/print/registration/page.tsx`)
+  - Shared `RegistrationsView` (`src/components/admin/RegistrationsView.tsx`) mounted at `/dept-admin/registrations` and `/super-admin/registrations`.
+  - Updated `PortalShell.tsx` navigation for `STUDENT`, `DEPARTMENT_ADMIN`, and `SUPER_ADMIN`.
+- **Registration RBAC Integration Suite (`tests/rbac/registration.test.ts`)**:
+  - Integration tests using `student10@uemp.demo` (Scenario S7) covering eligible registration & multi-role visibility (`student10`, `CSC` admin, `SUPER_ADMIN`, hidden from `MTH` admin), level/dept/program mismatches (`400`), duplicate (`409`), atomic batch rollback (`400`), `Promise.all` concurrent race (`[201, 409]`), closed registration window (`409`), drop rules (`200` own without result, `409` with result, `403` another student's), lecturer class list (`200` assigned, `403` unassigned), and profile field smuggling (`400`).
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/lib/validators/registration.ts`
+- `src/lib/validators/profile.ts`
+- `src/server/services/registration.service.ts`
+- `src/server/services/profile.service.ts`
+- `src/app/api/v1/registrations/available/route.ts`
+- `src/app/api/v1/registrations/route.ts`
+- `src/app/api/v1/registrations/[id]/route.ts`
+- `src/app/api/v1/profile/route.ts`
+- `src/app/(portal)/student/page.tsx`
+- `src/app/(portal)/student/profile/page.tsx`
+- `src/app/(portal)/student/courses/page.tsx`
+- `src/app/(portal)/student/print/registration/page.tsx`
+- `src/components/admin/RegistrationsView.tsx`
+- `src/app/(portal)/dept-admin/registrations/page.tsx`
+- `src/app/(portal)/super-admin/registrations/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/unit/registration-eligibility.test.ts`
+- `tests/rbac/registration.test.ts`
+
+### Known Gaps
+- None for Phase 5. Lecturer result entry & grading (Phase 6) and result approval workflow & CGPA (Phase 7) are next per Decision D1.
 
 
 
