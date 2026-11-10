@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {
+  Award,
   BookOpen,
   Calendar,
   CheckCircle2,
@@ -30,12 +31,14 @@ import {
   getAvailableCoursesForStudent,
   listRegistrations,
 } from "@/server/services/registration.service";
+import { getStudentAcademicHistory } from "@/server/services/student-results.service";
 
 export default async function StudentDashboardPage() {
   const session = await requireRole(["STUDENT"]);
-  const [availableData, regData] = await Promise.all([
+  const [availableData, regData, academicHistory] = await Promise.all([
     getAvailableCoursesForStudent(session),
     listRegistrations(session, { page: 1, pageSize: 50 }),
+    getStudentAcademicHistory(session),
   ]);
 
   const currentSem = availableData.currentSemester;
@@ -53,6 +56,13 @@ export default async function StudentDashboardPage() {
         description={`Student Academic Portal · ${sessionLabel}`}
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/student/results"
+              className={buttonVariants({ variant: "outline", size: "sm" })}
+            >
+              <Award className="h-4 w-4 mr-1.5" />
+              Academic Results
+            </Link>
             <Link
               href="/student/profile"
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -105,7 +115,28 @@ export default async function StudentDashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link href="/student/results" className="block">
+          <Card className="hover:border-primary/50 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <CardDescription className="text-xs font-medium">
+                Cumulative GPA (CGPA)
+              </CardDescription>
+              <Award className="h-4 w-4 text-primary shrink-0" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold tracking-tight text-primary">
+                {academicHistory.careerSummary.cgpa !== null
+                  ? academicHistory.careerSummary.cgpa.toFixed(2)
+                  : "—"}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {academicHistory.careerSummary.academicStanding}
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardDescription className="text-xs font-medium">

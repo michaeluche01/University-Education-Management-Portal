@@ -453,7 +453,56 @@
 - `tests/rbac/results-approval.test.ts`
 
 ### Known Gaps
-- Student results view, semester GPA/CGPA summary, printable result slip, audit log viewer, and administrative oversight (Phase 7b) are built next.
+- None for Phase 7a.
+
+---
+
+## Phase 7b: Student Results, CGPA Statements, Audit Viewer & Administrative Oversight
+
+### What Was Built
+- **Student Academic History & CGPA Calculations (`src/server/services/student-results.service.ts`)**:
+  - `getStudentAcademicHistory`: strictly restricted to authenticated students (`session.role === "STUDENT"`).
+  - Fetches ONLY `APPROVED` results for the student (all drafts, submitted, or returned results are excluded per Decision D3).
+  - Groups results chronologically by session start date and semester.
+  - Computes credit-unit weighted semester GPA (`sum(gp * units) / sum(units)` rounded half-up to 2 decimals) and running progressive CGPA up to each semester.
+  - Computes overall career totals (total registered units, total earned units where `gradePoint > 0`, cumulative CGPA, and standing).
+- **Audit Log Viewer & Oversight Service (`src/server/services/audit-view.service.ts`)**:
+  - `listAuditLogs`: role-scoped audit log viewer.
+  - `DEPARTMENT_ADMIN` is strictly scoped to `departmentId = session.departmentId` AND `entityType = "Result"`; draft logs (`RESULT_DRAFT_SAVED`) are filtered out (Decision D3). Attempting to query an alien department throws `403`.
+  - `SUPER_ADMIN` has university-wide oversight across all entity types (`Result`, `User`, `Course`, `CourseRegistration`, `Faculty`, `Department`, `Program`, `AcademicSession`, `GradeScale`, etc.) with multi-field filtering and date ranges.
+  - Secret sanitization: ensures no `passwordHash`, `lockedUntil`, or `failedLoginCount` are ever selected or serialized.
+- **REST Route Handlers (`src/app/api/v1/results`, `src/app/api/v1/audit-logs`)**:
+  - `GET /api/v1/results`: student approved examination results and CGPA summary.
+  - `GET /api/v1/audit-logs`: paginated administrative audit logs with filtering.
+- **Client Primitives & Student / Admin UIs**:
+  - `src/components/shared/PrintButton.tsx`: client-side print button triggering `window.print()`.
+  - `/student/results` (`src/app/(portal)/student/results/page.tsx`): interactive student results page with career CGPA card, academic standing badge, total units registered/earned, and semester breakdowns with course grades and GPA badges.
+  - `/student/print/results` (`src/app/(portal)/student/print/results/page.tsx`): print-optimized result statement with institution header, student bio-data, chronological semester course tables with GPAs/CGPAs, career summary, 5.0 grade scale legend, and prominent watermark ("STUDENT COPY — NOT AN OFFICIAL TRANSCRIPT").
+  - `/student` dashboard updated with CGPA stat card and direct links to academic results.
+  - Shared `AuditLogsView` component (`src/components/admin/AuditLogsView.tsx`) mounted at `/dept-admin/audit-logs` and `/super-admin/audit-logs`. Features action and entity filters, date range inputs, paginated table, and JSON payload inspection dialog for before/after state diffs.
+  - Navigation in `src/components/layout/PortalShell.tsx` updated with "Academic Results" for Student, and "Audit Logs" for Department Admin and Super Admin.
+- **RBAC Integration Suite (`tests/rbac/audit.test.ts`)**:
+  - 9 automated integration tests covering 401 unauthenticated requests, 403 for Student/Lecturer on `/api/v1/audit-logs`, Dept Admin scoping to CSC and `entityType: "Result"` with drafts hidden, 403 on cross-department queries, Super Admin university-wide oversight across multiple entity types, zero secrets/passwordHash leakage guarantee, student results route guards, and approved-only results verification with accurate GPA/CGPA.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/lib/validators/audit.ts`
+- `src/server/services/audit-view.service.ts`
+- `src/server/services/student-results.service.ts`
+- `src/app/api/v1/audit-logs/route.ts`
+- `src/app/api/v1/results/route.ts`
+- `src/components/shared/PrintButton.tsx`
+- `src/components/admin/AuditLogsView.tsx`
+- `src/app/(portal)/student/page.tsx`
+- `src/app/(portal)/student/results/page.tsx`
+- `src/app/(portal)/student/print/results/page.tsx`
+- `src/app/(portal)/dept-admin/audit-logs/page.tsx`
+- `src/app/(portal)/super-admin/audit-logs/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/rbac/audit.test.ts`
+
+### Known Gaps
+- None for Phases 6 and 7. Reports, analytics dashboards, CSV exports, and UI responsive polish (Phase 8) are next.
 
 
 
