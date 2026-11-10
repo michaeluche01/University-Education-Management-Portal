@@ -109,5 +109,7 @@
 
 ### Known Gaps
 - None for Phase 2. Phase 3+ screens and endpoints are scheduled for subsequent phases per Decision D1.
+- **Regression Fix (`fix: login/logout stuck loading state`)**: With Next.js 16 `cacheComponents: true`, client pages remain mounted inside hidden `<Activity>` boundaries across client-side navigations. Previously, `LoginPage` only called `setSubmitting(false)` on error and used `router.push(dashboardPath)` on success, while `PortalShell.handleLogout` used `router.push("/login")`, restoring the cached `LoginPage` instance with `submitting === true` and stale `email`/`password` state. Fixed by wrapping `LoginPage.handleSubmit` in `try/catch/finally` (always resetting `submitting` and clearing `password`, plus clearing `email` and calling `router.replace(dashboardPath)` on success) and changing `PortalShell.handleLogout` to use `window.location.assign("/login")` inside `try/catch/finally`.
+
 
 

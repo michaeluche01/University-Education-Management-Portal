@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GraduationCap, Loader2 } from "lucide-react";
@@ -47,6 +47,16 @@ export default function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    function handlePageShow() {
+      setSubmitting(false);
+      setPassword("");
+      setErrorMessage(null);
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, []);
+
   function fillDemoCredentials(demoEmail: string, demoPassword: string) {
     setEmail(demoEmail);
     setPassword(demoPassword);
@@ -77,19 +87,23 @@ export default function LoginPage() {
         const message =
           payload?.error?.message ?? "Unable to sign in. Please try again.";
         setErrorMessage(message);
+        setPassword("");
         toast.error(message);
-        setSubmitting(false);
         return;
       }
 
       const dashboardPath = payload?.data?.dashboardPath ?? "/";
+      setEmail("");
+      setPassword("");
       toast.success("Signed in successfully");
-      router.push(dashboardPath);
+      router.replace(dashboardPath);
       router.refresh();
     } catch {
       const fallback = "Network error while signing in. Please try again.";
       setErrorMessage(fallback);
+      setPassword("");
       toast.error(fallback);
+    } finally {
       setSubmitting(false);
     }
   }

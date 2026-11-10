@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   GraduationCap,
   LayoutDashboard,
@@ -46,7 +46,6 @@ export interface PortalShellProps {
 
 export function PortalShell({ user, children }: PortalShellProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -63,10 +62,11 @@ export function PortalShell({ user, children }: PortalShellProps) {
         throw new Error("Failed to log out");
       }
       toast.success("Signed out successfully");
-      router.push("/login");
-      router.refresh();
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign("/login");
     } catch {
       toast.error("Could not sign out. Please try again.");
+    } finally {
       setLoggingOut(false);
     }
   }
