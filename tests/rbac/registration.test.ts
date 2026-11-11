@@ -32,14 +32,12 @@ describe("Phase 5 Student Course Registration, Class List & Profile RBAC Suite",
   const createdRegIds: string[] = [];
 
   beforeAll(async () => {
-    const [saRes, cscRes, mthRes, lecRes, s10Res, s01Res] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026"),
-      lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      student10.login("student10@uemp.demo", "Uemp@Demo2026"),
-      student01.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const cscRes = await cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const mthRes = await mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026");
+    const lecRes = await lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const s10Res = await student10.login("student10@uemp.demo", "Uemp@Demo2026");
+    const s01Res = await student01.login("student01@uemp.demo", "Uemp@Demo2026");
     expect(saRes.status).toBe(200);
     expect(cscRes.status).toBe(200);
     expect(mthRes.status).toBe(200);

@@ -33,13 +33,11 @@ describe("Phase 6 Lecturer Results & Grading RBAC Suite", { timeout: 90000 }, ()
   const fixtureRegIds: string[] = [];
 
   beforeAll(async () => {
-    const [saRes, daRes, l1Res, l2Res, sRes] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      deptAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      lecturer2.login("lecturer2@uemp.demo", "Uemp@Demo2026"),
-      student.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const daRes = await deptAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const l1Res = await lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const l2Res = await lecturer2.login("lecturer2@uemp.demo", "Uemp@Demo2026");
+    const sRes = await student.login("student01@uemp.demo", "Uemp@Demo2026");
     expect(saRes.status).toBe(200);
     expect(daRes.status).toBe(200);
     expect(l1Res.status).toBe(200);

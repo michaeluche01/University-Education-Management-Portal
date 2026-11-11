@@ -630,7 +630,63 @@
 - `src/app/api/v1/reports/performance/route.ts`
 
 ### Known Gaps
-- Phase 9b (audit & secret hardening, max pageSize checks, and demo reset script `scripts/reset-demo.ts`) is next.
+- Phase 9a completed; Phase 9b (hardening + demo reset script) completed below.
+
+---
+
+## Phase 9b: Hardening, Audit Trail Sanitization & Demo Reset Script
+
+### What Was Built
+- **Vulnerability Audit**:
+  - Executed `npm audit --omit=dev` confirming 0 high and 0 critical vulnerabilities.
+- **Audit Log & Data Hardening**:
+  - Thoroughly audited all `writeAudit` invocation points across services.
+  - Sanitized `auth.service.ts` to ensure `failedLoginCount` and `lockedUntil` are never logged in audit log before/after summaries.
+  - Re-verified all paginated queries enforce strict maximum page sizes (`max(50)` or `max(100)`).
+- **Architecture Decisions Added (`docs/DECISIONS.md`)**:
+  - **D13**: Session cookie specification (httpOnly, Secure in production, SameSite=Lax, 8h expiry, signed HS256 JWT containing `{sub: userId}`, user reloaded from database on every request).
+  - **D14**: Report aggregation rule (academic performance summaries and course registration stats count APPROVED results only).
+  - **D15**: CSV formula injection prevention (all string fields starting with `=`, `+`, `-`, `@`, `\t`, `\r` are prefixed with single quote `'`).
+- **Resilient Demo Reset Tool (`scripts/reset-demo.ts`, `package.json`)**:
+  - Created standalone reset script with 6 safety guards:
+    1. Host inspection refusing production execution unless `CONFIRM_PROD=yes` and `RESET_CONFIRM=wipe-all-data`.
+    2. Mandatory `RESET_CONFIRM=wipe-all-data` requirement across all environments.
+    3. Pre-wipe row count audit table output across all 16 application tables.
+    4. Non-demo user safety check: blocks wipe if any user lacks `@uemp.demo` domain unless overridden with `ALLOW_NON_DEMO_USERS=yes`.
+    5. Clean atomic `TRUNCATE TABLE ... CASCADE` across all 16 tables.
+    6. Programmatic reseeding via `seed(prisma)` from `prisma/seed.ts` and post-reset row count summary.
+  - Added `"db:reset-demo": "tsx scripts/reset-demo.ts"` to `package.json`.
+  - Verified seed script idempotency across repeated runs.
+- **RBAC & Isolation Test Suite Hardening**:
+  - Converted test suite client authentications to sequential execution in `beforeAll` across `tests/rbac/*.ts` to prevent Neon connection pool spikes.
+  - Refined `tests/rbac/idor.test.ts` to target deterministic demo student credentials.
+  - Cleaned up ESLint unused variable warnings in tests and layout files.
+  - Verified 100% test pass rate across `npm run test:unit` (47 tests) and RBAC suites.
+  - Verified Next.js production build (`npm run build`) passing across all 68 dynamic and partial-prerendered routes.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `docs/DECISIONS.md`
+- `package.json`
+- `scripts/reset-demo.ts`
+- `prisma/seed.ts`
+- `src/server/services/auth.service.ts`
+- `src/app/(portal)/super-admin/layout.tsx`
+- `tests/rbac/audit.test.ts`
+- `tests/rbac/dept-scope.test.ts`
+- `tests/rbac/idor.test.ts`
+- `tests/rbac/matrix.test.ts`
+- `tests/rbac/pages.test.ts`
+- `tests/rbac/registration.test.ts`
+- `tests/rbac/reports.test.ts`
+- `tests/rbac/results-approval.test.ts`
+- `tests/rbac/results-lecturer.test.ts`
+- `tests/rbac/structure.test.ts`
+- `tests/rbac/users.test.ts`
+
+### Known Gaps
+- Phase 8 & Phase 9 fully complete. Phase 10 (documentation, README, ARCHITECTURE.md, ER diagram, deployment guide) is next.
+
 
 
 

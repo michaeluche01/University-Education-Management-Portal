@@ -50,13 +50,11 @@ describe("Phase 4a & 4b Department Scope, Courses, Assignments & Members RBAC Su
   const createdAssignmentIds: string[] = [];
 
   beforeAll(async () => {
-    const [saRes, cscRes, mthRes, lecRes, stuRes] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026"),
-      lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      student1.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const cscRes = await cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const mthRes = await mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026");
+    const lecRes = await lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const stuRes = await student1.login("student01@uemp.demo", "Uemp@Demo2026");
     expect(saRes.status).toBe(200);
     expect(cscRes.status).toBe(200);
     expect(mthRes.status).toBe(200);

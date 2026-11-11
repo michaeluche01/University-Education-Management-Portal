@@ -40,7 +40,7 @@ function checkProdSafety() {
   }
 }
 
-async function main() {
+export async function seed(prismaOverride?: PrismaClient) {
   checkProdSafety();
 
   const connectionString = process.env.DATABASE_URL;
@@ -48,8 +48,9 @@ async function main() {
     throw new Error("DATABASE_URL is not set.");
   }
 
-  const adapter = new PrismaPg({ connectionString });
-  const prisma = new PrismaClient({ adapter });
+  const prisma =
+    prismaOverride ??
+    new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
   try {
     const passwordHash = await bcrypt.hash("Uemp@Demo2026", 10);
@@ -1330,12 +1331,25 @@ async function main() {
       },
     ]);
   } finally {
-    await prisma.$disconnect();
+    if (!prismaOverride) {
+      await prisma.$disconnect();
+    }
   }
 }
 
-main().catch((err) => {
-  console.error("[seed] Error:", err);
-  process.exit(1);
-});
+const isDirectCliRun = Boolean(
+  process.argv.some(
+    (arg) =>
+      arg.replace(/\\/g, "/").endsWith("prisma/seed.ts") ||
+      arg.replace(/\\/g, "/").endsWith("/seed.ts") ||
+      arg === "prisma/seed.ts"
+  )
+);
+
+if (isDirectCliRun) {
+  seed().catch((err) => {
+    console.error("[seed] Error:", err);
+    process.exit(1);
+  });
+}
 

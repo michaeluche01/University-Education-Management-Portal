@@ -84,10 +84,6 @@ export async function authenticateUser(input: LoginInput): Promise<LoginResult> 
         action: "USER_LOGIN_FAILED",
         entityType: "User",
         entityId: user.id,
-        afterSummary: {
-          failedLoginCount: nextFailedCount,
-          lockedUntil: nextLockedUntil ? nextLockedUntil.toISOString() : null,
-        },
       });
     });
 

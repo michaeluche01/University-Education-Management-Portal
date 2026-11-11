@@ -47,13 +47,11 @@ describe("Comprehensive API RBAC Matrix & Origin Security Suite", { timeout: 120
   let fixtures: RouteFixtures;
 
   beforeAll(async () => {
-    // 1. Authenticate test clients
-    const [saRes, daRes, lRes, sRes] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      student.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    // 1. Authenticate test clients sequentially
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const daRes = await cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const lRes = await lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const sRes = await student.login("student01@uemp.demo", "Uemp@Demo2026");
 
     expect(saRes.status).toBe(200);
     expect(daRes.status).toBe(200);

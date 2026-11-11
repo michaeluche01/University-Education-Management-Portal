@@ -27,14 +27,12 @@ describe("Insecure Direct Object Reference (IDOR) Protection Suite", { timeout: 
   let cscResultId = "";
 
   beforeAll(async () => {
-    const [cRes, mRes, l1Res, l2Res, s1Res, s2Res] = await Promise.all([
-      cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026"),
-      lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      lecturer2.login("lecturer2@uemp.demo", "Uemp@Demo2026"),
-      student01.login("student01@uemp.demo", "Uemp@Demo2026"),
-      student02.login("student02@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const cRes = await cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const mRes = await mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026");
+    const l1Res = await lecturer1.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const l2Res = await lecturer2.login("lecturer2@uemp.demo", "Uemp@Demo2026");
+    const s1Res = await student01.login("student01@uemp.demo", "Uemp@Demo2026");
+    const s2Res = await student02.login("student02@uemp.demo", "Uemp@Demo2026");
 
     expect(cRes.status).toBe(200);
     expect(mRes.status).toBe(200);
@@ -48,7 +46,7 @@ describe("Insecure Direct Object Reference (IDOR) Protection Suite", { timeout: 
       mthProg,
       cscCourse,
       mthCourse,
-      cscLec,
+      ,
       mthLec,
       cscStu,
       mthStu,
@@ -59,11 +57,11 @@ describe("Insecure Direct Object Reference (IDOR) Protection Suite", { timeout: 
       prisma.course.findUniqueOrThrow({ where: { code: "MTH 101" } }),
       prisma.lecturer.findFirstOrThrow({ where: { staffId: "STAFF/CSC/001" } }),
       prisma.lecturer.findFirstOrThrow({ where: { staffId: "STAFF/MTH/001" } }),
-      prisma.student.findFirstOrThrow({ where: { department: { code: "CSC" } } }),
+      prisma.student.findFirstOrThrow({ where: { user: { email: "student01@uemp.demo" } } }),
       prisma.student.findFirstOrThrow({ where: { department: { code: "MTH" } } }),
     ]);
 
-    const [cscAssign, mthAssign, s1Reg, cscResItem] = await Promise.all([
+    const [, mthAssign, s1Reg, cscResItem] = await Promise.all([
       prisma.courseAssignment.findFirstOrThrow({ where: { courseId: cscCourse.id } }),
       prisma.courseAssignment.findFirstOrThrow({
         where: { course: { department: { code: "MTH" } } },

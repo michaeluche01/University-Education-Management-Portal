@@ -21,13 +21,11 @@ describe("Phase 7b Audit Viewer & Student Results RBAC Suite", { timeout: 90000 
   let mthDeptId = "";
 
   beforeAll(async () => {
-    const [saRes, cscRes, mthRes, lRes, sRes] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026"),
-      lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      student01.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const cscRes = await cscAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const mthRes = await mthAdmin.login("deptadmin.mth@uemp.demo", "Uemp@Demo2026");
+    const lRes = await lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const sRes = await student01.login("student01@uemp.demo", "Uemp@Demo2026");
     expect(saRes.status).toBe(200);
     expect(cscRes.status).toBe(200);
     expect(mthRes.status).toBe(200);

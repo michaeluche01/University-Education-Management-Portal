@@ -36,12 +36,10 @@ describe("Phase 3b Users Management RBAC & API Suite", { timeout: 60000 }, () =>
   const createdUserIds: string[] = [];
 
   beforeAll(async () => {
-    const [saRes, daRes, lecRes, stuRes] = await Promise.all([
-      superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026"),
-      deptAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026"),
-      lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026"),
-      student.login("student01@uemp.demo", "Uemp@Demo2026"),
-    ]);
+    const saRes = await superAdmin.login("superadmin@uemp.demo", "Uemp@Demo2026");
+    const daRes = await deptAdmin.login("deptadmin.csc@uemp.demo", "Uemp@Demo2026");
+    const lecRes = await lecturer.login("lecturer1@uemp.demo", "Uemp@Demo2026");
+    const stuRes = await student.login("student01@uemp.demo", "Uemp@Demo2026");
     expect(saRes.status).toBe(200);
     expect(daRes.status).toBe(200);
     expect(lecRes.status).toBe(200);

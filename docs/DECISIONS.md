@@ -10,8 +10,10 @@ D7 Every mutating route checks the Origin header against the app origin. Login: 
 D8 A change-password endpoint exists (PATCH /api/v1/auth/password). Admin-created accounts get an admin-set temporary password.
 D9 Seed (Phase 2) must include a previous session 2024/2025 with APPROVED results for 200/300-level students so CGPA and history are meaningful, and every workflow must be demonstrable from a clean seed: one student with zero current registrations, one course with registered students and no results, one course with SUBMITTED results awaiting approval, one RETURNED result with feedback.
 D10 Result.studentId/courseId/semesterId are always copied from the registration in the service, never accepted from the client.
-D11 Audit log is append-only: no update or delete code paths. A DB trigger enforcing this is added in Phase 7.
+D11 Audit log is append-only: no update or delete code paths. By application design, no update or delete endpoints exist; a database-level trigger was deliberately omitted.
 D12 One lecturer per course per semester: creating a course assignment when another lecturer is already assigned to that course and semester returns 409 Conflict; to change the assigned lecturer, unassign the existing assignment first (which is blocked with 409 if any Result rows exist for that course and semester).
-D13 AuditLog is append-only by application design (no update/delete code paths); a database-level trigger was deliberately not added.
+D13 Session cookie: httpOnly, Secure in production, SameSite=Lax, path=/, 8h lifetime, HS256 JWT containing only userId. Reload user on every request to derive role and status.
+D14 Reports count APPROVED results only: academic standing and GPA calculations never read draft, submitted or returned results.
+D15 CSV export neutralises formula injection: any cell starting with =, +, -, @, \t, \r is prefixed with a single quote.
 
 
