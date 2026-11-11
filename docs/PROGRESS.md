@@ -502,7 +502,53 @@
 - `tests/rbac/audit.test.ts`
 
 ### Known Gaps
-- None for Phases 6 and 7. Reports, analytics dashboards, CSV exports, and UI responsive polish (Phase 8) are next.
+- None for Phases 6 and 7.
+
+---
+
+## Phase 8a: Departmental & University Reports + CSV Export
+
+### What Was Built
+- **CSV Sanitization & Export Utility (`src/lib/csv.ts`, `tests/unit/csv.test.ts`)**:
+  - Implemented `sanitizeCsvCell` defending against spreadsheet formula injection (CSV injection): checks leading trigger characters (`=`, `+`, `-`, `@`, `\t`, `\r`) and prepends a single quote (`'`), while adhering to RFC 4180 quote-escaping rules for commas, quotes, and line breaks.
+  - Implemented `generateCsvString` and client-side `downloadCsv` generating a UTF-8 BOM blob and triggering browser download.
+  - Added unit test suite in `tests/unit/csv.test.ts` covering formula trigger neutralization and formatting edge cases.
+- **Reporting Services & Database Aggregations (`src/server/services/report.service.ts`)**:
+  - `getStudentReport`: paginated student roster, strictly scoped to own department for `DEPARTMENT_ADMIN` and university-wide for `SUPER_ADMIN`. Blocks `STUDENT` and `LECTURER` with 403. Supports multi-field filtering (`programId`, `levelId`, `status`, `search`).
+  - `getRegistrationReport`: aggregates course enrolments per course and totals by academic level using database `groupBy`. Scopes `LECTURER` strictly to their assigned courses, `DEPARTMENT_ADMIN` to department courses, and `SUPER_ADMIN` university-wide.
+  - `getPerformanceReport`: enforces the brief's non-negotiable rule that **only APPROVED results** are included in academic performance summaries (unsubmitted drafts, pending submissions, and returned results are excluded). Calculates course metrics (results count, average score, high/low, pass rate) and grade distribution (`A`–`F`) represented with pure CSS bar charts, plus program-level credit-weighted GPAs.
+- **REST Endpoints (`src/app/api/v1/reports/*`)**:
+  - `GET /api/v1/reports/students`
+  - `GET /api/v1/reports/registrations`
+  - `GET /api/v1/reports/performance`
+- **UI & Portal Navigation (`src/components/reports/ReportsView.tsx`, `src/app/(portal)/*`)**:
+  - Built unified, accessible `ReportsView` with tabs for Student List, Course Registrations, and Academic Performance.
+  - Integrated print stylesheet (`@media print`) rendering a clean formal institution header, active filter values, and generated-by credentials.
+  - Export CSV buttons for students, course registrations, course performance, and program performance.
+  - Mounted at `/dept-admin/reports`, `/super-admin/reports`, and `/lecturer/reports`.
+  - Added sidebar navigation entries in `PortalShell.tsx`.
+- **RBAC Integration Suite (`tests/rbac/reports.test.ts`)**:
+  - 15 automated integration tests verifying 401 unauthenticated access, 403 for students, 403 for lecturers on student rosters, cross-department protection, assigned course scoping, and accurate performance aggregation.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `src/lib/csv.ts`
+- `src/lib/validators/reports.ts`
+- `src/server/services/report.service.ts`
+- `src/app/api/v1/reports/students/route.ts`
+- `src/app/api/v1/reports/registrations/route.ts`
+- `src/app/api/v1/reports/performance/route.ts`
+- `src/components/reports/ReportsView.tsx`
+- `src/app/(portal)/dept-admin/reports/page.tsx`
+- `src/app/(portal)/super-admin/reports/page.tsx`
+- `src/app/(portal)/lecturer/reports/page.tsx`
+- `src/app/(portal)/lecturer/courses/page.tsx`
+- `src/components/layout/PortalShell.tsx`
+- `tests/unit/csv.test.ts`
+- `tests/rbac/reports.test.ts`
+
+### Known Gaps
+- Phase 8b cleanup & polish (score sheet auto-save removal, error/not-found boundaries, security headers, mobile polish) is next.
 
 
 

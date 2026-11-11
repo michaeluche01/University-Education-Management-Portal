@@ -31,6 +31,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
   LECTURER: [
     { label: "Dashboard", href: "/lecturer" },
     { label: "My Courses", href: "/lecturer/courses" },
+    { label: "Reports", href: "/lecturer/reports" },
   ],
   DEPARTMENT_ADMIN: [
     { label: "Dashboard", href: "/dept-admin" },
@@ -40,6 +41,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Students", href: "/dept-admin/students" },
     { label: "Lecturers", href: "/dept-admin/lecturers" },
     { label: "Registrations", href: "/dept-admin/registrations" },
+    { label: "Reports", href: "/dept-admin/reports" },
     { label: "Audit Logs", href: "/dept-admin/audit-logs" },
   ],
   SUPER_ADMIN: [
@@ -53,6 +55,7 @@ const ROLE_NAVIGATION: Record<Role, NavItem[]> = {
     { label: "Sessions & Semesters", href: "/super-admin/sessions" },
     { label: "Grade Scale", href: "/super-admin/grade-scale" },
     { label: "Users", href: "/super-admin/users" },
+    { label: "Reports", href: "/super-admin/reports" },
     { label: "Audit Logs", href: "/super-admin/audit-logs" },
   ],
 };
