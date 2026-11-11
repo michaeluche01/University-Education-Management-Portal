@@ -1,6 +1,18 @@
 export const BASE_URL =
   process.env.BASE_URL?.replace(/\/$/, "") || "http://localhost:3000";
 
+const parsedBaseUrl = new URL(BASE_URL);
+if (
+  parsedBaseUrl.hostname !== "localhost" &&
+  parsedBaseUrl.hostname !== "127.0.0.1" &&
+  parsedBaseUrl.hostname !== "::1" &&
+  process.env.ALLOW_REMOTE_TESTS !== "yes"
+) {
+  throw new Error(
+    `Test safety refusal: refusing to execute tests against non-local host '${parsedBaseUrl.hostname}'. Set ALLOW_REMOTE_TESTS=yes to override.`
+  );
+}
+
 export class ApiTestClient {
   private cookieHeader: string | null = null;
 

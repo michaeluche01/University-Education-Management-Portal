@@ -345,7 +345,11 @@ export async function dropStudentRegistration(
       },
     });
 
-    if (!existing || existing.studentId !== session.studentId) {
+    if (!existing) {
+      throw new AppError(404, "NOT_FOUND", "Registration record not found.");
+    }
+
+    if (existing.studentId !== session.studentId) {
       throw new AppError(
         403,
         "FORBIDDEN",

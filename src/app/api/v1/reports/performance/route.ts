@@ -1,9 +1,11 @@
+import { connection } from "next/server";
 import { handleApiError, okResponse } from "@/lib/errors";
 import { performanceReportQuerySchema } from "@/lib/validators/reports";
 import { requireRole } from "@/server/auth/rbac";
 import { getPerformanceReport } from "@/server/services/report.service";
 
 export async function GET(request: Request) {
+  await connection();
   try {
     const session = await requireRole([
       "SUPER_ADMIN",

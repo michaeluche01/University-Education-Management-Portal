@@ -1,9 +1,11 @@
+import { connection } from "next/server";
 import { handleApiError, okResponse } from "@/lib/errors";
 import { studentReportQuerySchema } from "@/lib/validators/reports";
 import { requireRole } from "@/server/auth/rbac";
 import { getStudentReport } from "@/server/services/report.service";
 
 export async function GET(request: Request) {
+  await connection();
   try {
     const session = await requireRole(["SUPER_ADMIN", "DEPARTMENT_ADMIN"]);
     const { searchParams } = new URL(request.url);

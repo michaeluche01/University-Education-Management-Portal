@@ -587,7 +587,51 @@
 - `src/app/(portal)/error.tsx`
 
 ### Known Gaps
-- Phase 9 (route manifest, automated RBAC security matrix, hardening, and demo reset script) is next.
+- Phase 9a completed; Phase 9b (hardening + demo reset script) is next.
+
+---
+
+## Phase 9a: Route Manifest, Static Route Guard Analysis & RBAC Matrix
+
+### What Was Built
+- **Remote Test Safety Guards (`tests/rbac/helpers.ts`)**:
+  - Enforced a hard guard in `ApiTestClient` preventing execution against remote/production environments unless `BASE_URL` hostname is `localhost`, `127.0.0.1`, `::1`, or `ALLOW_REMOTE_TESTS=yes`.
+- **Typed Route Manifest (`tests/rbac/route-manifest.ts`)**:
+  - Comprehensive manifest covering all 46 physical API route handlers with methods, allowed roles, public/mutating flags, and non-mutating validation-failing request fixture builders.
+- **Static Route Guard Analysis (`tests/unit/route-guards.test.ts`)**:
+  - Automated filesystem crawler verifying that every physical `src/app/api/**/route.ts` file is registered in the route manifest.
+  - Ensures every non-exempt route explicitly calls `requireRole()` or `requireAuth()`.
+  - Ensures every mutating handler (`POST`, `PATCH`, `PUT`, `DELETE`) calls `assertSameOrigin()`.
+- **Comprehensive RBAC Matrix Test Suite (`tests/rbac/matrix.test.ts`)**:
+  - 345 automated integration tests executed against the live API:
+    1. **Anonymous Access Matrix (62 tests)**: verifies `401 Unauthorized` for every non-exempt route.
+    2. **Authenticated Role Permission Matrix (248 tests)**: tests all 4 authenticated roles (`SUPER_ADMIN`, `DEPARTMENT_ADMIN`, `LECTURER`, `STUDENT`) across all routes, asserting `403 Forbidden` when unauthorized, and valid application responses (`200`, `201`, `400` Zod error, or `404` not found, never `401` or `403`) when authorized.
+    3. **Foreign Origin Rejection (35 tests)**: sends `Origin: http://malicious.evil-hacker.com` to every mutating endpoint, verifying rejection with `403 Forbidden`.
+    4. **Data Leakage Scanner**: recursively inspects all successful JSON responses for sensitive keys (`passwordHash`, `lockedUntil`, `failedLoginCount`, `SESSION_SECRET`), asserting zero secret leakage.
+- **Insecure Direct Object Reference (IDOR) Suite (`tests/rbac/idor.test.ts`)**:
+  - 9 integration tests verifying strict cross-department isolation (programs, courses, assignments, students, lecturers), cross-student registration dropping isolation, and unassigned lecturer/out-of-scope admin result history protection.
+- **Portal Page Route Isolation (`tests/rbac/pages.test.ts`)**:
+  - Verified anonymous redirect to `/login` across portal routes and authorized access per role.
+- **Package Scripts**:
+  - Added `"test:matrix": "vitest run tests/rbac/matrix.test.ts"` and `"test:all": "vitest run tests/unit && vitest run tests/rbac"`.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `package.json`
+- `tests/rbac/helpers.ts`
+- `tests/rbac/route-manifest.ts`
+- `tests/unit/route-guards.test.ts`
+- `tests/rbac/matrix.test.ts`
+- `tests/rbac/idor.test.ts`
+- `tests/rbac/pages.test.ts`
+- `src/server/services/registration.service.ts`
+- `src/app/api/v1/reports/students/route.ts`
+- `src/app/api/v1/reports/registrations/route.ts`
+- `src/app/api/v1/reports/performance/route.ts`
+
+### Known Gaps
+- Phase 9b (audit & secret hardening, max pageSize checks, and demo reset script `scripts/reset-demo.ts`) is next.
+
 
 
 
