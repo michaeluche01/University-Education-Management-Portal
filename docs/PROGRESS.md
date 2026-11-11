@@ -548,7 +548,46 @@
 - `tests/rbac/reports.test.ts`
 
 ### Known Gaps
-- Phase 8b cleanup & polish (score sheet auto-save removal, error/not-found boundaries, security headers, mobile polish) is next.
+- None for Phase 8a.
+
+---
+
+## Phase 8b: UI Cleanup, Error Boundaries & Security Headers
+
+### What Was Built
+- **Academic Standing Cleanup (`/student/results`, `/student/print/results`)**:
+  - Removed "academic standing" badge and labels per brief requirements, retaining cumulative CGPA, semester GPA, and credit units.
+- **Lecturer Scoresheet Unsaved Changes & Navigation Guard (`src/components/lecturer/LecturerScoreSheet.tsx`)**:
+  - Confirmed explicit-only saving via "Save Draft" or "Submit for Review".
+  - Added interactive unsaved changes indicator pill with visual highlight.
+  - Added `window.beforeunload` warning event listener alerting users if navigating away with uncommitted score edits.
+  - Confirmed `saveDraftResults` in `result.service.ts` writes audit entries strictly when cell values change (`caScore` or `examScore`).
+- **Error, Not Found & Loading Boundaries (`src/app/*`, `src/app/(portal)/*`)**:
+  - Added root and portal-level `error.tsx` handling permission denial (`403` / forbidden) with friendly role-redirection prompts.
+  - Added root and portal-level `not-found.tsx` for missing routes or entities.
+  - Added root and portal-level `loading.tsx` providing smooth skeleton transitions across route boundaries.
+- **Security Headers & Server Hardening (`next.config.ts`)**:
+  - Configured `poweredByHeader: false` removing `X-Powered-By: Next.js`.
+  - Added HTTP security headers for all paths: `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`, and minimal `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
+  - CSP was deliberately skipped as permitted by the brief to prevent Turbopack hydration and style breakage without nonce infrastructure.
+- **Portal Navigation Verification**:
+  - Verified 1:1 parity between all `ROLE_NAVIGATION` entries and physical page routes on disk across all 4 roles.
+
+### Files Added / Modified
+- `docs/PROGRESS.md`
+- `next.config.ts`
+- `src/app/(portal)/student/results/page.tsx`
+- `src/app/(portal)/student/print/results/page.tsx`
+- `src/components/lecturer/LecturerScoreSheet.tsx`
+- `src/app/loading.tsx`
+- `src/app/not-found.tsx`
+- `src/app/error.tsx`
+- `src/app/(portal)/loading.tsx`
+- `src/app/(portal)/not-found.tsx`
+- `src/app/(portal)/error.tsx`
+
+### Known Gaps
+- Phase 9 (route manifest, automated RBAC security matrix, hardening, and demo reset script) is next.
 
 
 

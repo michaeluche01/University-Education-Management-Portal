@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  AlertCircle,
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
@@ -126,6 +127,7 @@ export function LecturerScoreSheet({
   const [savingDraft, setSavingDraft] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const fetchSheet = useCallback(async () => {
     setLoading(true);
@@ -165,6 +167,7 @@ export function LecturerScoreSheet({
         };
       }
       setDraftInputs(initialInputs);
+      setHasUnsavedChanges(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load scores sheet");
     } finally {
@@ -179,11 +182,24 @@ export function LecturerScoreSheet({
     return () => clearTimeout(timer);
   }, [fetchSheet]);
 
+  // Warn if navigating away with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const handleInputChange = (
     registrationId: string,
     field: "caText" | "examText",
     value: string
   ) => {
+    setHasUnsavedChanges(true);
     setDraftInputs((prev) => ({
       ...prev,
       [registrationId]: {
@@ -277,6 +293,7 @@ export function LecturerScoreSheet({
       }
 
       toast.success("Draft scores saved successfully");
+      setHasUnsavedChanges(false);
       await fetchSheet();
     } catch {
       toast.error("Network error while saving draft.");
@@ -307,6 +324,7 @@ export function LecturerScoreSheet({
       }
 
       toast.success("Results submitted for departmental review!");
+      setHasUnsavedChanges(false);
       setSubmitDialogOpen(false);
       await fetchSheet();
     } catch {
@@ -327,6 +345,12 @@ export function LecturerScoreSheet({
           Back to Courses
         </Link>
         <div className="flex items-center gap-2">
+          {hasUnsavedChanges && !isReadOnly && (
+            <span className="inline-flex items-center gap-1.5 text-xs text-amber-800 bg-amber-100 border border-amber-300 px-2.5 py-1 rounded-md font-medium animate-pulse">
+              <AlertCircle className="h-3.5 w-3.5 text-amber-600" />
+              Unsaved Changes
+            </span>
+          )}
           {!isReadOnly ? (
             <>
               <Button

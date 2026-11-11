@@ -205,14 +205,6 @@ export default async function PrintStudentResultsPage() {
                 / 5.00
               </span>
             </div>
-            <div>
-              <span className="text-muted-foreground block text-[11px]">
-                Academic Standing
-              </span>
-              <span className="font-bold">
-                {careerSummary.academicStanding}
-              </span>
-            </div>
           </div>
         </div>
 

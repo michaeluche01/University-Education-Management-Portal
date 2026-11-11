@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -71,20 +70,7 @@ export default async function StudentResultsPage() {
                 ? careerSummary.cgpa.toFixed(2)
                 : "—"}
             </div>
-            <div className="mt-1">
-              <StatusBadge
-                status={
-                  careerSummary.academicStanding === "Good Standing"
-                    ? "ACTIVE"
-                    : careerSummary.academicStanding === "Academic Probation"
-                    ? "SUSPENDED"
-                    : "DRAFT"
-                }
-              />
-              <span className="text-xs text-muted-foreground ml-2">
-                {careerSummary.academicStanding}
-              </span>
-            </div>
+            <p className="text-xs text-muted-foreground mt-1">Scale of 5.00</p>
           </CardContent>
         </Card>
 
