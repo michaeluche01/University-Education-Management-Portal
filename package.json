@@ -17,7 +17,8 @@
     "db:migrate:prod": "node -e \"if (process.env.CONFIRM_PROD !== 'yes') { console.error('Refusing to run against production: set CONFIRM_PROD=yes'); process.exit(1); }\" && dotenv -e .env.production -- prisma migrate deploy",
     "db:seed": "prisma db seed",
     "db:seed:prod": "node -e \"if (process.env.CONFIRM_PROD !== 'yes') { console.error('Refusing to run against production: set CONFIRM_PROD=yes'); process.exit(1); }\" && dotenv -e .env.production -- prisma db seed",
-    "db:reset-demo": "tsx scripts/reset-demo.ts"
+    "db:reset-demo": "tsx scripts/reset-demo.ts",
+    "db:reset-demo:prod": "dotenv -e .env.production -- tsx scripts/reset-demo.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

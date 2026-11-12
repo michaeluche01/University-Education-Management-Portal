@@ -685,7 +685,107 @@
 - `tests/rbac/users.test.ts`
 
 ### Known Gaps
-- Phase 8 & Phase 9 fully complete. Phase 10 (documentation, README, ARCHITECTURE.md, ER diagram, deployment guide) is next.
+- None. Phase 9b fully verified and completed.
+
+---
+
+## Phase 10a: Production README & Setup Guide
+
+### What Was Built
+- **Comprehensive Root README (`README.md`)**:
+  - Full project overview and chosen primary workflow (*Lecturer score entry $\to$ Department Admin approval $\to$ Student results & CGPA*).
+  - Production deployment link (`<VERCEL_URL>`) and cold-start latency note regarding Neon free-tier database suspend/resume.
+  - Complete technology stack rationale across all framework and library layers.
+  - Cross-platform local setup instructions for Windows (PowerShell) and macOS/Linux (Bash/Zsh).
+  - Test credentials table with role scope, passwords, and initial flows.
+  - Seeded scenarios to try table mapping **S1–S8** to exact courses, demo accounts, and expected behaviors.
+  - Grading scale table (A–F, 5.0 standard) and integer-hundredths credit-unit-weighted GPA/CGPA mathematical formulas.
+  - Complete scripts reference table with testing safety warnings.
+  - Vercel & Neon deployment guide (pooled runtime URLs, direct migration URLs, CLI migrations).
+  - Clean project directory tree and links to companion documentation.
+  - Honest known limitations (single lecturer per course/semester, out-of-scope integrations, cold-start latency, application-level audit logging).
+
+### Files Added / Modified
+- `README.md`
+
+### Known Gaps
+- None for Phase 10a.
+
+---
+
+## Phase 10b: Technical Documentation, ER Diagram & Demo Script
+
+### What Was Built
+- **System Architecture & Technical Specifications (`docs/ARCHITECTURE.md`)**:
+  - System component architecture diagram in Mermaid.
+  - End-to-end 9-stage authenticated API request lifecycle diagram.
+  - Authentication, JWT session token (`jose`), and cookie security model.
+  - Complete 46-endpoint RBAC permission matrix across all 4 roles.
+  - Scope isolation rules (department, assignment, student ownership).
+  - Result status lifecycle state machine in Mermaid with concurrency guards.
+  - Immutable audit trail architecture and secret sanitization.
+  - Integer-hundredths GPA precision math.
+  - Security controls inventory and full testing strategy.
+- **Database ER Diagram & Dictionary (`docs/ER_DIAGRAM.md`)**:
+  - Mermaid entity-relationship diagram covering all 16 Prisma models.
+  - Comprehensive table dictionary documenting purpose, key columns, unique constraints, indexes, and business rule enforcement for all 16 tables.
+  - Formally cross-checked against `prisma/schema.prisma`.
+- **Demonstration Walkthrough Script (`docs/DEMO_SCRIPT.md`)**:
+  - 7:30-minute timestamped script for video recording covering all 4 roles, scenarios S1–S8, IDOR testing, and clean database reset.
+- **Candidate Interview Reference (`notes/INTERVIEW_PREP.md`)**:
+  - In-depth answers for architectural, relational, security, concurrency, and stack rationale interview questions.
+  - Added `notes/` to `.gitignore` to prevent publishing private interview notes.
+
+### Files Added / Modified
+- `.gitignore`
+- `docs/ARCHITECTURE.md`
+- `docs/DEMO_SCRIPT.md`
+- `docs/ER_DIAGRAM.md`
+- `notes/INTERVIEW_PREP.md`
+
+### Known Gaps
+- None for Phase 10b.
+
+---
+
+## Phase 11: Final Verification, Acceptance Evidence & Production Reset Script
+
+### What Was Built
+- **Acceptance Criteria & Business Rules Evidence Matrix (`docs/ACCEPTANCE.md`)**:
+  - Mapped all 10 Acceptance Criteria from Section 8 to physical endpoints, UI pages, and automated Vitest test cases.
+  - Mapped all 8 Business Rules from Section 6 to database schema constraints, service functions, and test cases.
+  - Deliverables checklist covering all 8 requirements from Section 7.
+- **Production-Ready Demo Reset Script (`scripts/reset-demo.ts`, `package.json`)**:
+  - Added `EXPECTED_DB_HOST` validation requiring an explicit host substring match before truncating data.
+  - Added pre-wipe console output of target host, user count, and result count.
+  - Added `"db:reset-demo:prod": "dotenv -e .env.production -- tsx scripts/reset-demo.ts"` to `package.json`.
+  - Tested refusal with wrong `EXPECTED_DB_HOST` (exited with code 1) and execution with matching `EXPECTED_DB_HOST` against dev database.
+  - Increased Prisma transaction timeout in `prisma/seed.ts` (`maxWait: 15000, timeout: 30000`) for high network latency resilience.
+- **Environment & Repository Hygiene**:
+  - Added optional deployment and safety guard variables to `.env.example`.
+  - Confirmed only `.env.example` is tracked by Git.
+  - Confirmed no real secrets or connection strings exist in Git history or markdown files.
+- **Complete Test & Build Verification**:
+  - `npm run test:unit`: 6 passed, 47 passed.
+  - `npm run test:all`: 18 passed, 693 passed (47 unit + 646 RBAC integration tests).
+  - `npx prisma validate`: Schema valid.
+  - `npx prisma migrate status`: Database schema is up to date (2 migrations).
+  - `npm run lint`: 0 errors, 0 warnings.
+  - `npm run build`: Production build succeeded across all 68 routes.
+  - `npm run db:seed`: Seeded twice consecutively with identical row counts (idempotent).
+  - `npm audit --omit=dev`: 0 high, 0 critical vulnerabilities.
+
+### Files Added / Modified
+- `docs/ACCEPTANCE.md`
+- `docs/PROGRESS.md`
+- `.env.example`
+- `package.json`
+- `scripts/reset-demo.ts`
+- `prisma/seed.ts`
+
+### Known Gaps
+- All 11 Phases are 100% complete, fully verified, and ready for evaluation submission.
+
 
 
 

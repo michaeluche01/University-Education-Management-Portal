@@ -950,91 +950,94 @@ export async function seed(prismaOverride?: PrismaClient) {
         return;
       }
 
-      await prisma.$transaction(async (tx) => {
-        const createdResult = await tx.result.create({
-          data: {
-            registrationId: reg.id,
-            studentId: reg.studentId,
-            courseId: reg.courseId,
-            semesterId: reg.semesterId,
-            caScore,
-            examScore,
-            totalScore,
-            grade,
-            gradePoint,
-            status,
-            feedback: feedback ?? null,
-            enteredById: enteredByUserId,
-            submittedAt,
-            reviewedById: reviewedByUserId ?? null,
-            reviewedAt,
-          },
-        });
-
-        const transitions: {
-          actorId: string;
-          actorRole: Role;
-          action: AuditAction;
-          reason?: string;
-        }[] = [
-          {
-            actorId: enteredByUserId,
-            actorRole: "LECTURER",
-            action: "RESULT_DRAFT_SAVED",
-          },
-        ];
-
-        if (
-          status === "SUBMITTED" ||
-          status === "APPROVED" ||
-          status === "RETURNED"
-        ) {
-          transitions.push({
-            actorId: enteredByUserId,
-            actorRole: "LECTURER",
-            action: "RESULT_SUBMITTED",
-          });
-        }
-
-        if (status === "APPROVED" && reviewedByUserId) {
-          transitions.push({
-            actorId: reviewedByUserId,
-            actorRole: reviewedByRole,
-            action: "RESULT_APPROVED",
-          });
-        }
-
-        if (status === "RETURNED" && reviewedByUserId) {
-          transitions.push({
-            actorId: reviewedByUserId,
-            actorRole: reviewedByRole,
-            action: "RESULT_RETURNED",
-            reason: feedback,
-          });
-        }
-
-        for (const t of transitions) {
-          await tx.auditLog.create({
+      await prisma.$transaction(
+        async (tx) => {
+          const createdResult = await tx.result.create({
             data: {
-              actorId: t.actorId,
-              actorRole: t.actorRole,
-              departmentId: course.departmentId,
-              action: t.action,
-              entityType: "Result",
-              entityId: createdResult.id,
-              afterSummary: {
-                courseCode: params.courseCode,
-                caScore,
-                examScore,
-                totalScore,
-                grade,
-                status,
-              },
-              reason: t.reason ?? null,
+              registrationId: reg.id,
+              studentId: reg.studentId,
+              courseId: reg.courseId,
+              semesterId: reg.semesterId,
+              caScore,
+              examScore,
+              totalScore,
+              grade,
+              gradePoint,
+              status,
+              feedback: feedback ?? null,
+              enteredById: enteredByUserId,
+              submittedAt,
+              reviewedById: reviewedByUserId ?? null,
+              reviewedAt,
             },
           });
-        }
-      });
+
+          const transitions: {
+            actorId: string;
+            actorRole: Role;
+            action: AuditAction;
+            reason?: string;
+          }[] = [
+            {
+              actorId: enteredByUserId,
+              actorRole: "LECTURER",
+              action: "RESULT_DRAFT_SAVED",
+            },
+          ];
+
+          if (
+            status === "SUBMITTED" ||
+            status === "APPROVED" ||
+            status === "RETURNED"
+          ) {
+            transitions.push({
+              actorId: enteredByUserId,
+              actorRole: "LECTURER",
+              action: "RESULT_SUBMITTED",
+            });
+          }
+
+          if (status === "APPROVED" && reviewedByUserId) {
+            transitions.push({
+              actorId: reviewedByUserId,
+              actorRole: reviewedByRole,
+              action: "RESULT_APPROVED",
+            });
+          }
+
+          if (status === "RETURNED" && reviewedByUserId) {
+            transitions.push({
+              actorId: reviewedByUserId,
+              actorRole: reviewedByRole,
+              action: "RESULT_RETURNED",
+              reason: feedback,
+            });
+          }
+
+          for (const t of transitions) {
+            await tx.auditLog.create({
+              data: {
+                actorId: t.actorId,
+                actorRole: t.actorRole,
+                departmentId: course.departmentId,
+                action: t.action,
+                entityType: "Result",
+                entityId: createdResult.id,
+                afterSummary: {
+                  courseCode: params.courseCode,
+                  caScore,
+                  examScore,
+                  totalScore,
+                  grade,
+                  status,
+                },
+                reason: t.reason ?? null,
+              },
+            });
+          }
+        },
+        { maxWait: 15000, timeout: 30000 }
+      );
     }
 
     // =====================================================================

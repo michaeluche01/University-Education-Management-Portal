@@ -310,3 +310,4 @@ Refer to [docs/DECISIONS.md](DECISIONS.md) for full rationale on all recorded de
 - **D13**: Session cookie security specifications (httpOnly, Secure in prod, SameSite=Lax, 8h expiry).
 - **D14**: Reports count approved results only.
 - **D15**: CSV formula injection prevention using single quote escaping.
+

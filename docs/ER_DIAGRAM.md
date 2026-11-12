@@ -330,3 +330,4 @@ erDiagram
   - `INDEX (actorId, createdAt)`: Enables tracking of user activity timelines.
   - `INDEX (action, createdAt)`: Enables system-wide compliance monitoring.
 - **Business Rule Enforced**: Complete traceability of all result modifications, approvals, and administrative mutations (Section 6.8).
+

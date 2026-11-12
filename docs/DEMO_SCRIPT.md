@@ -165,3 +165,4 @@ A complete, timestamped walkthrough script for recording the assessment video de
   4. Show the clean table truncate and reseeding output restoring the demo database to pristine evaluation status.
 - **Narrator**:
   > *"The entire solution is thoroughly verified by 649 automated tests, including an exhaustive 345-test RBAC matrix. After this recording, running npm run db:reset-demo safely wipes all test data and reseeds pristine demo records, ensuring the evaluation team can test every scenario from a clean state. Thank you."*
+
