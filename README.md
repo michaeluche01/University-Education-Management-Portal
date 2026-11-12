@@ -3,6 +3,7 @@
 A production-grade, full-stack university academic management platform designed for higher education institutions. UEMP manages academic structures, student course registrations, lecturer score entries, departmental result approvals, student transcripts, and institutional performance reports with strict role-based access control (RBAC), departmental multi-tenancy, and immutable audit logging.
 
 - **Live Application URL**: `https://university-education-management-por-zeta.vercel.app/`
+- **Demonstration Video URL[Unlisted link]**: `https://youtu.be/qFZfHfAp60g`
 - **Demo Accounts Password**: `Uemp@Demo2026`
 - **Default Database**: PostgreSQL on Neon (Free Tier)
   > [!NOTE]
